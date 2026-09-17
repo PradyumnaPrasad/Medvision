@@ -45,9 +45,13 @@ retrieval:
 
 llm:
   provider: "ollama"
-  model: "llama3.1:8b"
+  base_url: "http://127.0.0.1:11434"
+  # gemma3:4b is what's actually pulled on the dev machine; swap to a larger model
+  # (e.g. llama3.1:8b) if one is available — the client only needs Ollama's /api/generate.
+  model: "gemma3:4b"
   temperature: 0.1
   timeout_s: 60
+  max_retries: 2
   grounding_regenerate_threshold: 0.8
 
 api:

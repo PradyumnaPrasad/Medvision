@@ -1,10 +1,10 @@
 """End-to-end MEDVISION inference pipeline: image in, explainable AnalysisResult out.
 
-Current scope (demo milestone): classifier -> Grad-CAM -> zone localization -> KG
-differential-diagnosis scoring -> a template-based report. This intentionally
-does NOT yet include calibration (T14), retrieval (T19-20), or LLM narration with
-a grounding verifier (T22-24) — those replace `_build_report` in a later slice
-without changing this module's public `analyze()` contract.
+Pipeline: classifier -> Grad-CAM -> zone localization -> KG differential-diagnosis
+scoring -> LLM narration with a citation verifier (falling back to a deterministic
+template report if the LLM is unavailable or fails verification). This intentionally
+does NOT yet include calibration (T14) or retrieval (T19-20) — those slot in without
+changing this module's public `analyze()` contract.
 """
 
 from __future__ import annotations
@@ -24,8 +24,14 @@ from medvision.explain.gradcam import GradCamExplainer
 from medvision.explain.localize import localize
 from medvision.kg.build import build_graph
 from medvision.kg.graph import KnowledgeGraph
-from medvision.kg.reasoning import DiagnosisScore, score_differentials
+from medvision.kg.reasoning import score_differentials
+from medvision.reasoning.llm import OllamaClient
+from medvision.reasoning.narrate import narrate
+from medvision.reasoning.schema import EvidenceBlock, GroundingResult, LLMReport
+from medvision.reasoning.template import flatten_report
 from medvision.vision.classifier import ChestXrayClassifier
+
+ReportSource = Literal["llm", "template"]
 
 FindingStatus = Literal["present", "possible", "absent"]
 
@@ -62,7 +68,11 @@ class AnalysisResult(BaseModel):
     created_at: float
     findings: list[FindingOut]
     differentials: list[DifferentialOut]
-    report_text: str
+    report: LLMReport
+    report_source: ReportSource
+    grounding: GroundingResult
+    evidence: EvidenceBlock  # id-tagged evidence (F1, D1, K1, ...) that report cites
+    report_text: str  # flattened plain-text rendering of `report`, for PDF/back-compat
     timings_ms: dict[str, float]
     disclaimer: str
 
@@ -72,6 +82,7 @@ class _Models:
     classifier: ChestXrayClassifier
     explainer: GradCamExplainer
     graph: KnowledgeGraph
+    llm_client: OllamaClient
 
 
 @lru_cache(maxsize=1)
@@ -83,7 +94,8 @@ def get_models() -> _Models:
     from medvision.config import get_labels_map
 
     graph = build_graph(settings.paths.resolve("kg_ontology_dir"), get_labels_map())
-    return _Models(classifier=classifier, explainer=explainer, graph=graph)
+    llm_client = OllamaClient()
+    return _Models(classifier=classifier, explainer=explainer, graph=graph, llm_client=llm_client)
 
 
 def _classify_status(
@@ -96,42 +108,31 @@ def _classify_status(
     return "absent"
 
 
-def _build_report(
-    findings: list[FindingOut], differentials: list[DiagnosisScore], disclaimer: str
-) -> str:
-    """Template-based draft report. To be replaced by LLM narration + verifier (PLAN.md T22-T24)."""
-    shown = [f for f in findings if f.status != "absent"]
-    lines: list[str] = []
+@dataclass(frozen=True)
+class _EvidenceFindingView:
+    """Adapts a FindingOut for medvision.reasoning (region resolved to a clinical name,
+    e.g. 'right lower zone' instead of the raw KG id 'A_RIGHT_LOWER_ZONE') without
+    changing FindingOut itself, which the API/UI still key by the raw region id."""
 
-    lines.append("FINDINGS:")
-    if not shown:
-        lines.append("  No findings met the reporting threshold.")
-    else:
-        for f in shown:
-            region = (
-                f" most prominent in the {graph_node_name(f.region).lower()}" if f.region else ""
-            )
-            qualifier = "is present" if f.status == "present" else "is possibly present"
-            lines.append(f"  - {f.name} {qualifier} (p={f.prob:.2f}){region}.")
+    node_id: str
+    name: str
+    prob: float
+    status: str
+    region: str | None
 
-    lines.append("")
-    lines.append("IMPRESSION:")
-    if not differentials:
-        lines.append("  No differential diagnosis reached the activation threshold.")
-    else:
-        top = differentials[0]
-        evidence = ", ".join(sorted({graph_finding_name(p.src) for p in top.paths}))
-        lines.append(
-            f"  Findings are most consistent with {top.name} (score={top.score:.2f}), "
-            f"supported by: {evidence}."
-        )
-        if len(differentials) > 1:
-            others = ", ".join(d.name for d in differentials[1:])
-            lines.append(f"  Differential diagnoses to also consider: {others}.")
 
-    lines.append("")
-    lines.append(f"NOTE: {disclaimer}")
-    return "\n".join(lines)
+def _evidence_view(finding: FindingOut, graph: KnowledgeGraph) -> _EvidenceFindingView:
+    region_name = None
+    if finding.region:
+        node = graph.get_node(finding.region)
+        region_name = node.name.lower() if node else finding.region.lower()
+    return _EvidenceFindingView(
+        node_id=finding.node_id,
+        name=finding.name,
+        prob=finding.prob,
+        status=finding.status,
+        region=region_name,
+    )
 
 
 def graph_node_name(node_id: str) -> str:
@@ -226,11 +227,16 @@ def analyze(
     ]
     timings["kg_reasoning_ms"] = (time.perf_counter() - t0) * 1000
 
-    t0 = time.perf_counter()
-    report_text = _build_report(findings, diagnosis_scores, settings.disclaimer)
-    timings["report_ms"] = (time.perf_counter() - t0) * 1000
-
+    # sort before building evidence so evidence ids (F1, F2, ...) follow the same
+    # descending-probability order the API/UI display the findings in
     findings.sort(key=lambda f: -f.prob)
+
+    t0 = time.perf_counter()
+    evidence_findings = [_evidence_view(f, models.graph) for f in findings]
+    narration = narrate(evidence_findings, diagnosis_scores, models.graph, client=models.llm_client)
+    report_text = flatten_report(narration.report, settings.disclaimer)
+    timings["narration_ms"] = (time.perf_counter() - t0) * 1000
+
     timings["total_ms"] = sum(timings.values())
 
     return AnalysisResult(
@@ -238,6 +244,10 @@ def analyze(
         created_at=time.time(),
         findings=findings,
         differentials=differentials,
+        report=narration.report,
+        report_source=narration.source,
+        grounding=narration.grounding,
+        evidence=narration.evidence,
         report_text=report_text,
         timings_ms=timings,
         disclaimer=settings.disclaimer,

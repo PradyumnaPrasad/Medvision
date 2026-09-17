@@ -73,9 +73,11 @@ class RetrievalConfig(BaseModel):
 
 class LlmConfig(BaseModel):
     provider: str = "ollama"
-    model: str = "llama3.1:8b"
+    base_url: str = "http://127.0.0.1:11434"
+    model: str = "gemma3:4b"
     temperature: float = 0.1
     timeout_s: int = 60
+    max_retries: int = 2
     grounding_regenerate_threshold: float = 0.8
 
 

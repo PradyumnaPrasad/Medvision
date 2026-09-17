@@ -12,9 +12,20 @@ FIXTURE = Path(__file__).parent / "fixtures" / "sample_cxr.png"
 @pytest.fixture(scope="module")
 def client():
     from backend.app.main import app
+    from medvision.pipeline import get_models
 
     with TestClient(app) as c:
-        yield c
+        # Force the deterministic template report path for API tests: fast and
+        # reproducible, independent of whether Ollama happens to be running on the
+        # machine these tests execute on. The real LLM path has its own coverage in
+        # tests/test_pipeline.py::test_analyze_with_real_llm_when_available.
+        models = get_models()
+        original_is_available = models.llm_client.is_available
+        models.llm_client.is_available = lambda: False
+        try:
+            yield c
+        finally:
+            models.llm_client.is_available = original_is_available
 
 
 @pytest.fixture
@@ -62,6 +73,13 @@ def test_analyze_returns_findings_and_differentials(uploaded_analysis):
     assert data["differentials"]
     assert "FINDINGS:" in data["report_text"]
     assert data["disclaimer"]
+
+    # LLM narration is forced off (see the `client` fixture), so this should be the
+    # deterministic, fully-grounded template report
+    assert data["report_source"] == "template"
+    assert data["grounding"]["score"] == 1.0
+    assert data["evidence"]["findings"]
+    assert data["report"]["findings"]
 
 
 @pytest.mark.slow
