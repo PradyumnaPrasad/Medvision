@@ -8,6 +8,8 @@ the KG path (medvision/kg/reasoning.py) is the textual half.
 
 from __future__ import annotations
 
+import copy
+
 import numpy as np
 import torch
 from PIL import Image
@@ -47,8 +49,9 @@ class GradCamExplainer:
             if label in classifier.labels_map
         }
 
-        # Run Grad-CAM on a CPU copy of the model to sidestep MPS backward-pass gaps.
-        self._cam_model = classifier.model.to("cpu")
+        # Run Grad-CAM on a CPU *copy* of the model (never mutate classifier.model in place —
+        # it's a process-wide cached singleton shared with plain inference on self.device).
+        self._cam_model = copy.deepcopy(classifier.model).to("cpu")
         layer_path = target_layer or settings.gradcam.target_layer
         target_layers = [_resolve_layer(self._cam_model, layer_path)]
         self._cam = GradCAM(model=self._cam_model, target_layers=target_layers)

@@ -44,3 +44,22 @@ def test_unknown_node_raises():
     image = Image.open(FIXTURE)
     with pytest.raises(KeyError):
         explainer.heatmap(image, "F_NOT_A_REAL_NODE")
+
+
+@pytest.mark.slow
+def test_building_explainer_does_not_move_shared_classifier_model():
+    """Regression test: GradCamExplainer must not mutate the classifier's cached model
+    in place. It used to call classifier.model.to("cpu") directly, which silently moved
+    the process-wide cached model off its real device (e.g. mps) and broke every later
+    call to classifier.predict()."""
+    classifier = ChestXrayClassifier()
+    original_device = classifier.device
+    image = Image.open(FIXTURE)
+
+    GradCamExplainer(classifier)  # constructing the explainer must not side-effect classifier
+
+    param_device = next(classifier.model.parameters()).device.type
+    assert param_device == original_device
+    # predict() must still work on the classifier's own device after building an explainer
+    predictions = classifier.predict(image)
+    assert predictions
