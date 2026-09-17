@@ -30,11 +30,70 @@ export interface FindingOut {
   heatmap_path: string | null;
 }
 
+export interface EvidenceFinding {
+  id: string; // "F1", "F2", ...
+  node_id: string;
+  name: string;
+  prob: number;
+  status: FindingStatus;
+  region: string | null;
+}
+
+export interface EvidenceDifferential {
+  id: string; // "D1", "D2", ...
+  node_id: string;
+  name: string;
+  score: number;
+  supporting_fact_ids: string[];
+}
+
+export interface EvidenceKgFact {
+  id: string; // "K1", "K2", ...
+  text: string;
+}
+
+export interface EvidenceBlock {
+  findings: EvidenceFinding[];
+  differentials: EvidenceDifferential[];
+  kg_facts: EvidenceKgFact[];
+}
+
+export interface ReportItem {
+  text: string;
+  evidence_ids: string[];
+}
+
+export interface DifferentialItem {
+  diagnosis: string;
+  rationale: string;
+  evidence_ids: string[];
+}
+
+export interface LLMReport {
+  findings: ReportItem[];
+  impression: ReportItem[];
+  differentials: DifferentialItem[];
+  limitations: string[];
+  recommendation: string;
+}
+
+export type ReportSource = "llm" | "template";
+
+export interface GroundingResult {
+  score: number;
+  unsupported: string[];
+  contradictions: string[];
+}
+
 export interface AnalysisResult {
   id: string;
   created_at: number;
   findings: FindingOut[];
   differentials: DifferentialOut[];
+  report: LLMReport;
+  report_source: ReportSource;
+  grounding: GroundingResult;
+  evidence: EvidenceBlock;
   report_text: string;
   timings_ms: Record<string, number>;
   disclaimer: string;

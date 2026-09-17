@@ -111,7 +111,13 @@ function App() {
             </div>
             <div className="space-y-4">
               <DifferentialsPanel differentials={result.differentials} />
-              <ReportPanel reportText={result.report_text} timingsMs={result.timings_ms} />
+              <ReportPanel
+                report={result.report}
+                report_source={result.report_source}
+                grounding={result.grounding}
+                evidence={result.evidence}
+                timings_ms={result.timings_ms}
+              />
             </div>
           </>
         )}
