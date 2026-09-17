@@ -1,10 +1,10 @@
 """End-to-end MEDVISION inference pipeline: image in, explainable AnalysisResult out.
 
-Pipeline: classifier -> Grad-CAM -> zone localization -> KG differential-diagnosis
-scoring -> LLM narration with a citation verifier (falling back to a deterministic
-template report if the LLM is unavailable or fails verification). This intentionally
-does NOT yet include calibration (T14) or retrieval (T19-20) — those slot in without
-changing this module's public `analyze()` contract.
+Pipeline: classifier -> temperature-scaled calibration -> Grad-CAM -> zone
+localization -> KG differential-diagnosis scoring -> LLM narration with a citation
+verifier (falling back to a deterministic template report if the LLM is unavailable
+or fails verification). This intentionally does NOT yet include retrieval (T19-20)
+— that slots in without changing this module's public `analyze()` contract.
 """
 
 from __future__ import annotations
@@ -29,6 +29,7 @@ from medvision.reasoning.llm import OllamaClient
 from medvision.reasoning.narrate import narrate
 from medvision.reasoning.schema import EvidenceBlock, GroundingResult, LLMReport
 from medvision.reasoning.template import flatten_report
+from medvision.vision.calibrate import CalibrationData, load_calibration
 from medvision.vision.classifier import ChestXrayClassifier
 
 ReportSource = Literal["llm", "template"]
@@ -56,7 +57,8 @@ class FindingOut(BaseModel):
     node_id: str
     label: str
     name: str
-    prob: float
+    prob: float  # calibrated probability (identity/unchanged for labels with no fitted temperature)
+    raw_prob: float  # the classifier's original, uncalibrated output — kept for transparency
     status: FindingStatus
     region: str | None = None
     region_share: float | None = None
@@ -83,6 +85,7 @@ class _Models:
     explainer: GradCamExplainer
     graph: KnowledgeGraph
     llm_client: OllamaClient
+    calibration: CalibrationData
 
 
 @lru_cache(maxsize=1)
@@ -95,7 +98,14 @@ def get_models() -> _Models:
 
     graph = build_graph(settings.paths.resolve("kg_ontology_dir"), get_labels_map())
     llm_client = OllamaClient()
-    return _Models(classifier=classifier, explainer=explainer, graph=graph, llm_client=llm_client)
+    calibration = load_calibration(settings.paths.resolve("models_dir") / "calibration.json")
+    return _Models(
+        classifier=classifier,
+        explainer=explainer,
+        graph=graph,
+        llm_client=llm_client,
+        calibration=calibration,
+    )
 
 
 def _classify_status(
@@ -173,8 +183,9 @@ def analyze(
     findings: list[FindingOut] = []
     finding_probs: dict[str, float] = {}
     for p in predictions:
-        status = _classify_status(p.prob, pos_th, unc_th)
-        finding_probs[p.node_id] = p.prob
+        calibrated_prob = models.calibration.apply(p.node_id, p.prob)
+        status = _classify_status(calibrated_prob, pos_th, unc_th)
+        finding_probs[p.node_id] = calibrated_prob
         node = models.graph.get_node(p.node_id)
         region = None
         region_share = None
@@ -195,7 +206,8 @@ def analyze(
                 node_id=p.node_id,
                 label=p.label,
                 name=node.name if node else p.label,
-                prob=p.prob,
+                prob=calibrated_prob,
+                raw_prob=p.prob,
                 status=status,
                 region=region,
                 region_share=region_share,

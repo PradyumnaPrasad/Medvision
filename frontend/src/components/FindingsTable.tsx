@@ -73,8 +73,18 @@ export function FindingsTable({ analysisId, findings, selectedNodeId, onSelect }
                         style={{ width: `${Math.round(f.prob * 100)}%` }}
                       />
                     </div>
-                    <span className="text-slate-500 text-xs w-10 text-right">
+                    <span
+                      className="text-slate-500 text-xs w-10 text-right"
+                      title={
+                        Math.abs(f.prob - f.raw_prob) >= 0.01
+                          ? `Calibrated from raw model output of ${(f.raw_prob * 100).toFixed(0)}%`
+                          : "Raw model output (no calibration fitted for this finding yet)"
+                      }
+                    >
                       {(f.prob * 100).toFixed(0)}%
+                      {Math.abs(f.prob - f.raw_prob) >= 0.01 && (
+                        <sup className="text-indigo-400">*</sup>
+                      )}
                     </span>
                   </div>
                 </td>
@@ -119,6 +129,12 @@ export function FindingsTable({ analysisId, findings, selectedNodeId, onSelect }
           })}
         </tbody>
       </table>
+      {findings.some((f) => Math.abs(f.prob - f.raw_prob) >= 0.01) && (
+        <div className="px-4 py-2 text-xs text-slate-400 border-t border-slate-50">
+          <sup className="text-indigo-400">*</sup> calibrated against real labeled data —
+          hover a percentage to see the raw model output
+        </div>
+      )}
     </div>
   );
 }

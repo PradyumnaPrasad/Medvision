@@ -27,8 +27,10 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "pyarrow>=25.0.1",
     "pytest>=8.0",
     "ruff>=0.4",
+    "scipy>=1.17.1",
 ]
 
 [tool.ruff]

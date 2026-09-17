@@ -13,7 +13,8 @@ data/processed/
 data/chroma/
 data/kg/*.json
 data/kg/*.pt
-data/models/
+data/models/*
+!data/models/calibration.json
 data/uploads/
 data/*.db
 *.pt

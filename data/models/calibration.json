@@ -1,0 +1,48 @@
+{
+  "temperatures": {
+    "F_INFILTRATION": 0.31624554188005954,
+    "F_LUNG_OPACITY": 0.46427824158721825
+  },
+  "default_temperature": 1.0,
+  "fitted_at": "2026-09-17T16:52:10.801072+00:00",
+  "dataset": "keremberke/chest-xray-classification (HF parquet mirror of the Kermany/Mooney 'Chest X-Ray Images (Pneumonia)' dataset): full/test split (N=582) used to fit temperature, full/validation split (N=1165) held out for evaluation. Binary Normal(0)/Pneumonia(1) label used as ground truth for pneumonia-correlated findings only.",
+  "notes": "Candidates considered (using Normal-vs-Pneumonia labels as a ground-truth proxy for these pneumonia-correlated findings): F_PNEUMONIA_OPACITY, F_CONSOLIDATION, F_INFILTRATION, F_LUNG_OPACITY. Accepted (fitted temperature genuinely improved held-out ECE, see metrics): F_INFILTRATION, F_LUNG_OPACITY. Rejected (reverted to identity \u2014 see metrics[node].reason): F_CONSOLIDATION, F_PNEUMONIA_OPACITY. All other labels were never candidates and also default to 1.0 \u2014 calibrating them needs per-label ground truth (e.g. full NIH ChestX-ray14), future work (PLAN.md T31).",
+  "metrics": {
+    "F_PNEUMONIA_OPACITY": {
+      "fitted_temperature": 19.999996114605242,
+      "accepted": false,
+      "reason": "fit diverged toward the search bound (degenerate \u2014 raw probability has no usable absolute-value signal here)",
+      "ece_before": 0.5708197972950473,
+      "ece_after": 0.2724139069871407,
+      "n_fit": 582,
+      "n_eval": 1165
+    },
+    "F_CONSOLIDATION": {
+      "fitted_temperature": 0.5685308785633235,
+      "accepted": false,
+      "reason": "held-out ECE improvement (-1%) below the 10% acceptance threshold",
+      "ece_before": 0.30811945657073936,
+      "ece_after": 0.31221904491357033,
+      "n_fit": 582,
+      "n_eval": 1165
+    },
+    "F_INFILTRATION": {
+      "fitted_temperature": 0.31624554188005954,
+      "accepted": true,
+      "reason": "kept fitted temperature",
+      "ece_before": 0.1675974374485118,
+      "ece_after": 0.06250084020163663,
+      "n_fit": 582,
+      "n_eval": 1165
+    },
+    "F_LUNG_OPACITY": {
+      "fitted_temperature": 0.46427824158721825,
+      "accepted": true,
+      "reason": "kept fitted temperature",
+      "ece_before": 0.1440082648968876,
+      "ece_after": 0.04737186605151066,
+      "n_fit": 582,
+      "n_eval": 1165
+    }
+  }
+}

@@ -53,6 +53,31 @@ def test_analyze_end_to_end(tmp_path: Path, force_template_report):
 
 
 @pytest.mark.slow
+def test_analyze_applies_fitted_calibration_to_findings(force_template_report, monkeypatch):
+    """A finding with a fitted (non-identity) temperature should come back with prob !=
+    raw_prob, using exactly the same math as medvision.vision.calibrate.apply_temperature —
+    while a finding with no fitted temperature stays unchanged (prob == raw_prob)."""
+    from medvision.vision.calibrate import CalibrationData, apply_temperature
+
+    fake_calibration = CalibrationData(
+        temperatures={"F_INFILTRATION": 0.5}, default_temperature=1.0
+    )
+    monkeypatch.setattr(get_models(), "calibration", fake_calibration)
+
+    image = Image.open(FIXTURE)
+    result = analyze(image, save_dir=None)
+
+    by_node = {f.node_id: f for f in result.findings}
+    infiltration = by_node["F_INFILTRATION"]
+    assert infiltration.prob == pytest.approx(apply_temperature(infiltration.raw_prob, 0.5))
+    assert infiltration.prob != infiltration.raw_prob
+
+    # a label with no fitted temperature (falls back to default_temperature=1.0) is unchanged
+    fibrosis = by_node["F_FIBROSIS"]
+    assert fibrosis.prob == fibrosis.raw_prob
+
+
+@pytest.mark.slow
 def test_analyze_without_save_dir_skips_heatmap_files(force_template_report):
     image = Image.open(FIXTURE)
     result = analyze(image, save_dir=None)

@@ -23,7 +23,8 @@ export interface FindingOut {
   node_id: string;
   label: string;
   name: string;
-  prob: number;
+  prob: number; // calibrated (identity/unchanged for labels with no fitted temperature)
+  raw_prob: number; // the classifier's original, uncalibrated output
   status: FindingStatus;
   region: string | null;
   region_share: number | null;
