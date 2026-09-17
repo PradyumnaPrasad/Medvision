@@ -1,0 +1,22 @@
+# Maps torchxrayvision's pathology output labels to MEDVISION knowledge-graph Finding node IDs.
+# torchxrayvision's densenet121-res224-all exposes 18 pathologies (some datasets don't supervise
+# all of them; xrv reports NaN for unsupported ones per-checkpoint, which we treat as "unknown").
+label_to_node:
+  Atelectasis: F_ATELECTASIS
+  Consolidation: F_CONSOLIDATION
+  Infiltration: F_INFILTRATION
+  Pneumothorax: F_PNEUMOTHORAX
+  Edema: F_EDEMA
+  Emphysema: F_EMPHYSEMA
+  Fibrosis: F_FIBROSIS
+  Effusion: F_EFFUSION
+  Pneumonia: F_PNEUMONIA_OPACITY
+  Pleural_Thickening: F_PLEURAL_THICKENING
+  Cardiomegaly: F_CARDIOMEGALY
+  Nodule: F_NODULE
+  Mass: F_MASS
+  Hernia: F_HERNIA
+  "Lung Lesion": F_LUNG_LESION
+  Fracture: F_FRACTURE
+  "Lung Opacity": F_LUNG_OPACITY
+  "Enlarged Cardiomediastinum": F_ENLARGED_MEDIASTINUM

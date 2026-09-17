@@ -1,0 +1,57 @@
+# MEDVISION default configuration.
+# Every threshold / model name / path used by medvision/* must come from here — no magic numbers in code.
+
+paths:
+  data_dir: "data"
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  kg_dir: "data/kg"
+  chroma_dir: "data/chroma"
+  models_dir: "data/models"
+  uploads_dir: "data/uploads"
+  kg_ontology_dir: "kg/ontology"
+  labels_config: "configs/labels.yaml"
+
+device:
+  prefer: ["mps", "cuda", "cpu"]  # tried in order; first available wins
+
+vision:
+  classifier: "torchxrayvision"
+  weights: "densenet121-res224-all"
+  input_resolution: 224
+  # thresholds are per-label overrides in calibration.json once T14 runs; these are the fallback defaults
+  default_pos_threshold: 0.5
+  default_uncertain_threshold: 0.3
+
+gradcam:
+  target_layer: "features.denseblock4"
+
+qc:
+  ood_similarity_threshold: 0.22
+  min_resolution: 128
+
+kg:
+  reasoning:
+    top_k_differentials: 3
+    contradiction_penalty_weight: 1.0
+    activation_threshold: 0.3  # a finding node "activates" the graph if calibrated prob >= this
+
+retrieval:
+  top_k_nodes: 5
+  top_k_snippets: 5
+  top_k_cases: 5
+
+llm:
+  provider: "ollama"
+  model: "llama3.1:8b"
+  temperature: 0.1
+  timeout_s: 60
+  grounding_regenerate_threshold: 0.8
+
+api:
+  host: "0.0.0.0"
+  port: 8000
+  max_upload_mb: 20
+  allowed_extensions: [".png", ".jpg", ".jpeg", ".dcm"]
+
+disclaimer: "Research prototype for a college major project. Not a certified medical device. Not for clinical use."
