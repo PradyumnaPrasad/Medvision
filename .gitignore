@@ -15,6 +15,7 @@ data/kg/*.json
 data/kg/*.pt
 data/models/
 data/uploads/
+data/*.db
 *.pt
 *.pth
 *.ckpt

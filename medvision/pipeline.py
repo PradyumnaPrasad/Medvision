@@ -147,16 +147,19 @@ graph_finding_name = graph_node_name
 def analyze(
     image: Image.Image,
     save_dir: Path | None = None,
+    result_id: str | None = None,
 ) -> AnalysisResult:
     """Run the full pipeline on a single PIL image and return an explainable AnalysisResult.
 
     If save_dir is given, Grad-CAM overlays for each present/possible finding are written
     there as heatmap_<node_id>.png, and FindingOut.heatmap_path is set to that filename.
+    Callers that need to know the id up front (e.g. to name save_dir after it) can pass
+    result_id explicitly instead of letting analyze() generate one.
     """
     settings = get_settings()
     models = get_models()
     timings: dict[str, float] = {}
-    result_id = str(uuid.uuid4())
+    result_id = result_id or str(uuid.uuid4())
 
     t0 = time.perf_counter()
     predictions = models.classifier.predict(image)
