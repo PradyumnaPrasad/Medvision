@@ -1,0 +1,127 @@
+# Disease/condition nodes: the differential diagnoses MEDVISION reasons toward.
+# These are never predicted directly by the classifier — they are reached by walking
+# suggestive_of / associated_with edges out of activated Finding nodes (medvision/kg/reasoning.py).
+nodes:
+  - id: D_PNEUMONIA
+    type: Disease
+    name: Pneumonia
+    aliases: [lung infection, pneumonitis]
+    definition: "Infection of the lung parenchyma, commonly bacterial or viral, causing consolidation."
+    mesh_id: D011014
+    source: mesh
+
+  - id: D_CHF
+    type: Disease
+    name: Congestive Heart Failure
+    aliases: [heart failure, cardiac failure]
+    definition: "Inability of the heart to pump effectively, often producing cardiomegaly, edema and effusions."
+    mesh_id: D006333
+    source: mesh
+
+  - id: D_COPD
+    type: Disease
+    name: Chronic Obstructive Pulmonary Disease
+    aliases: [copd, chronic bronchitis]
+    definition: "Progressive airflow limitation associated with emphysema and chronic bronchitis."
+    mesh_id: D029424
+    source: mesh
+
+  - id: D_TUBERCULOSIS
+    type: Disease
+    name: Pulmonary Tuberculosis
+    aliases: [tb, tuberculosis]
+    definition: "Mycobacterial lung infection often producing upper-lobe cavitary or fibrotic disease."
+    mesh_id: D014390
+    source: mesh
+
+  - id: D_LUNG_CANCER
+    type: Disease
+    name: Lung Malignancy
+    aliases: [lung cancer, bronchogenic carcinoma]
+    definition: "Primary malignant neoplasm of the lung, often presenting as a nodule or mass."
+    mesh_id: D002283
+    source: mesh
+
+  - id: D_IDIOPATHIC_PULMONARY_FIBROSIS
+    type: Disease
+    name: Idiopathic Pulmonary Fibrosis
+    aliases: [ipf, interstitial lung disease]
+    definition: "Progressive fibrosing interstitial lung disease of unknown cause."
+    mesh_id: D054990
+    source: mesh
+
+  - id: D_ARDS
+    type: Disease
+    name: Acute Respiratory Distress Syndrome
+    aliases: [ards]
+    definition: "Acute diffuse lung injury causing bilateral opacities and severe hypoxemia."
+    mesh_id: D012128
+    source: mesh
+
+  - id: D_PLEURAL_EFFUSION_MALIGNANT
+    type: Disease
+    name: Malignant Pleural Effusion
+    aliases: [malignant effusion]
+    definition: "Pleural effusion caused by metastatic or primary thoracic malignancy."
+    source: team
+
+  - id: D_ASBESTOSIS
+    type: Disease
+    name: Asbestosis
+    aliases: [asbestos-related lung disease]
+    definition: "Pulmonary fibrosis and pleural disease resulting from asbestos fiber inhalation."
+    mesh_id: D001194
+    source: mesh
+
+  - id: D_PULMONARY_EMBOLISM
+    type: Disease
+    name: Pulmonary Embolism
+    aliases: [pe]
+    definition: "Obstruction of a pulmonary artery, usually by thrombus, that can cause effusion or infarction."
+    mesh_id: D011655
+    source: mesh
+
+  - id: D_LUNG_ABSCESS
+    type: Disease
+    name: Lung Abscess
+    aliases: [pulmonary abscess]
+    definition: "A necrotic cavity within the lung, often with an air-fluid level, from infection."
+    mesh_id: D008171
+    source: mesh
+
+  - id: D_SARCOIDOSIS
+    type: Disease
+    name: Sarcoidosis
+    aliases: []
+    definition: "A granulomatous multisystem disease commonly involving the lungs and mediastinal nodes."
+    mesh_id: D012507
+    source: mesh
+
+  - id: D_PNEUMOCONIOSIS
+    type: Disease
+    name: Pneumoconiosis
+    aliases: [occupational lung disease]
+    definition: "Fibrotic lung disease from chronic inhalation of mineral dust."
+    mesh_id: D011008
+    source: mesh
+
+  - id: D_METASTATIC_DISEASE
+    type: Disease
+    name: Pulmonary Metastases
+    aliases: [metastatic nodules]
+    definition: "Multiple pulmonary nodules or masses from metastatic spread of a non-pulmonary primary tumor."
+    source: team
+
+  - id: D_RIB_TRAUMA
+    type: Disease
+    name: Traumatic Rib Injury
+    aliases: [chest trauma]
+    definition: "Blunt or penetrating chest trauma resulting in rib fracture, with risk of associated pneumothorax."
+    source: team
+
+  - id: D_HIATAL_HERNIA_DISEASE
+    type: Disease
+    name: Hiatal Hernia (clinical)
+    aliases: []
+    definition: "Clinically significant herniation of stomach through the diaphragmatic hiatus."
+    source: team

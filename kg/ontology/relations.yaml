@@ -1,0 +1,377 @@
+# Edges of the MEDVISION knowledge graph. Every edge MUST carry a weight (0-1) and a source,
+# so every step of a diagnosis path can be traced back to why it exists (PLAN.md section 4.2).
+# Weights here are hand-set by the team from general clinical/radiology teaching knowledge for
+# a college project — they are illustrative, not clinically validated (see README limitations).
+#
+# Relation types:
+#   suggestive_of   Finding -> Disease   (positive evidence toward a diagnosis)
+#   contradicts     Finding -> Disease   (negative evidence against a diagnosis)
+#   differential_of Disease -> Disease   (commonly confused / competing diagnoses)
+#   complication_of Disease -> Disease   (one disease can progress into another)
+#   located_in      Finding -> Anatomy   (typical/possible site for this finding; not exclusive)
+#   part_of         Anatomy -> Anatomy   (containment hierarchy)
+edges:
+  # --- suggestive_of: Finding -> Disease ---
+  - src: F_CONSOLIDATION
+    rel: suggestive_of
+    dst: D_PNEUMONIA
+    weight: 0.85
+    source: team
+    note: "Consolidation is the classic radiographic sign of infective pneumonia."
+  - src: F_CONSOLIDATION
+    rel: suggestive_of
+    dst: D_LUNG_ABSCESS
+    weight: 0.3
+    source: team
+  - src: F_CONSOLIDATION
+    rel: suggestive_of
+    dst: D_ARDS
+    weight: 0.3
+    source: team
+
+  - src: F_INFILTRATION
+    rel: suggestive_of
+    dst: D_PNEUMONIA
+    weight: 0.6
+    source: team
+  - src: F_INFILTRATION
+    rel: suggestive_of
+    dst: D_TUBERCULOSIS
+    weight: 0.4
+    source: team
+  - src: F_INFILTRATION
+    rel: suggestive_of
+    dst: D_IDIOPATHIC_PULMONARY_FIBROSIS
+    weight: 0.3
+    source: team
+
+  - src: F_PNEUMONIA_OPACITY
+    rel: suggestive_of
+    dst: D_PNEUMONIA
+    weight: 0.9
+    source: team
+
+  - src: F_EFFUSION
+    rel: suggestive_of
+    dst: D_CHF
+    weight: 0.6
+    source: team
+  - src: F_EFFUSION
+    rel: suggestive_of
+    dst: D_PLEURAL_EFFUSION_MALIGNANT
+    weight: 0.4
+    source: team
+  - src: F_EFFUSION
+    rel: suggestive_of
+    dst: D_PULMONARY_EMBOLISM
+    weight: 0.3
+    source: team
+  - src: F_EFFUSION
+    rel: suggestive_of
+    dst: D_PNEUMONIA
+    weight: 0.3
+    source: team
+    note: "Parapneumonic effusion."
+
+  - src: F_EDEMA
+    rel: suggestive_of
+    dst: D_CHF
+    weight: 0.85
+    source: team
+
+  - src: F_CARDIOMEGALY
+    rel: suggestive_of
+    dst: D_CHF
+    weight: 0.8
+    source: team
+
+  - src: F_ENLARGED_MEDIASTINUM
+    rel: suggestive_of
+    dst: D_CHF
+    weight: 0.3
+    source: team
+  - src: F_ENLARGED_MEDIASTINUM
+    rel: suggestive_of
+    dst: D_LUNG_CANCER
+    weight: 0.3
+    source: team
+    note: "Mediastinal/hilar lymphadenopathy from malignancy."
+  - src: F_ENLARGED_MEDIASTINUM
+    rel: suggestive_of
+    dst: D_SARCOIDOSIS
+    weight: 0.3
+    source: team
+
+  - src: F_ATELECTASIS
+    rel: suggestive_of
+    dst: D_LUNG_CANCER
+    weight: 0.3
+    source: team
+    note: "Obstructive atelectasis distal to an endobronchial tumor."
+  - src: F_ATELECTASIS
+    rel: suggestive_of
+    dst: D_PNEUMONIA
+    weight: 0.2
+    source: team
+
+  - src: F_PNEUMOTHORAX
+    rel: suggestive_of
+    dst: D_RIB_TRAUMA
+    weight: 0.5
+    source: team
+  - src: F_PNEUMOTHORAX
+    rel: suggestive_of
+    dst: D_COPD
+    weight: 0.3
+    source: team
+    note: "Rupture of an emphysematous bulla."
+
+  - src: F_EMPHYSEMA
+    rel: suggestive_of
+    dst: D_COPD
+    weight: 0.9
+    source: team
+
+  - src: F_FIBROSIS
+    rel: suggestive_of
+    dst: D_IDIOPATHIC_PULMONARY_FIBROSIS
+    weight: 0.8
+    source: team
+  - src: F_FIBROSIS
+    rel: suggestive_of
+    dst: D_ASBESTOSIS
+    weight: 0.4
+    source: team
+  - src: F_FIBROSIS
+    rel: suggestive_of
+    dst: D_PNEUMOCONIOSIS
+    weight: 0.4
+    source: team
+  - src: F_FIBROSIS
+    rel: suggestive_of
+    dst: D_SARCOIDOSIS
+    weight: 0.3
+    source: team
+  - src: F_FIBROSIS
+    rel: suggestive_of
+    dst: D_TUBERCULOSIS
+    weight: 0.3
+    source: team
+    note: "Fibrotic scarring from prior healed tuberculosis."
+
+  - src: F_PLEURAL_THICKENING
+    rel: suggestive_of
+    dst: D_ASBESTOSIS
+    weight: 0.6
+    source: team
+  - src: F_PLEURAL_THICKENING
+    rel: suggestive_of
+    dst: D_TUBERCULOSIS
+    weight: 0.3
+    source: team
+
+  - src: F_NODULE
+    rel: suggestive_of
+    dst: D_LUNG_CANCER
+    weight: 0.5
+    source: team
+  - src: F_NODULE
+    rel: suggestive_of
+    dst: D_TUBERCULOSIS
+    weight: 0.3
+    source: team
+    note: "Granuloma."
+  - src: F_NODULE
+    rel: suggestive_of
+    dst: D_METASTATIC_DISEASE
+    weight: 0.3
+    source: team
+  - src: F_NODULE
+    rel: suggestive_of
+    dst: D_SARCOIDOSIS
+    weight: 0.2
+    source: team
+
+  - src: F_MASS
+    rel: suggestive_of
+    dst: D_LUNG_CANCER
+    weight: 0.75
+    source: team
+  - src: F_MASS
+    rel: suggestive_of
+    dst: D_LUNG_ABSCESS
+    weight: 0.2
+    source: team
+  - src: F_MASS
+    rel: suggestive_of
+    dst: D_METASTATIC_DISEASE
+    weight: 0.3
+    source: team
+
+  - src: F_LUNG_LESION
+    rel: suggestive_of
+    dst: D_LUNG_CANCER
+    weight: 0.4
+    source: team
+  - src: F_LUNG_LESION
+    rel: suggestive_of
+    dst: D_TUBERCULOSIS
+    weight: 0.3
+    source: team
+  - src: F_LUNG_LESION
+    rel: suggestive_of
+    dst: D_METASTATIC_DISEASE
+    weight: 0.3
+    source: team
+
+  - src: F_FRACTURE
+    rel: suggestive_of
+    dst: D_RIB_TRAUMA
+    weight: 0.9
+    source: team
+
+  - src: F_LUNG_OPACITY
+    rel: suggestive_of
+    dst: D_PNEUMONIA
+    weight: 0.4
+    source: team
+  - src: F_LUNG_OPACITY
+    rel: suggestive_of
+    dst: D_LUNG_CANCER
+    weight: 0.2
+    source: team
+  - src: F_LUNG_OPACITY
+    rel: suggestive_of
+    dst: D_TUBERCULOSIS
+    weight: 0.2
+    source: team
+
+  - src: F_HERNIA
+    rel: suggestive_of
+    dst: D_HIATAL_HERNIA_DISEASE
+    weight: 0.9
+    source: team
+
+  # --- contradicts: Finding -> Disease ---
+  - src: F_NO_FINDING
+    rel: contradicts
+    dst: D_PNEUMONIA
+    weight: 1.0
+    source: team
+  - src: F_NO_FINDING
+    rel: contradicts
+    dst: D_CHF
+    weight: 1.0
+    source: team
+  - src: F_NO_FINDING
+    rel: contradicts
+    dst: D_LUNG_CANCER
+    weight: 1.0
+    source: team
+
+  # --- differential_of / complication_of: Disease -> Disease ---
+  - src: D_TUBERCULOSIS
+    rel: differential_of
+    dst: D_LUNG_CANCER
+    weight: 0.5
+    source: team
+    note: "Both can present as an upper-lobe mass or cavity."
+  - src: D_PNEUMONIA
+    rel: differential_of
+    dst: D_TUBERCULOSIS
+    weight: 0.4
+    source: team
+  - src: D_LUNG_ABSCESS
+    rel: complication_of
+    dst: D_PNEUMONIA
+    weight: 0.4
+    source: team
+  - src: D_ARDS
+    rel: complication_of
+    dst: D_PULMONARY_EMBOLISM
+    weight: 0.2
+    source: team
+
+  # --- located_in: Finding -> Anatomy (typical/possible sites, weight = typicality) ---
+  - src: F_EFFUSION
+    rel: located_in
+    dst: A_RIGHT_COSTOPHRENIC_ANGLE
+    weight: 0.5
+    source: team
+  - src: F_EFFUSION
+    rel: located_in
+    dst: A_LEFT_COSTOPHRENIC_ANGLE
+    weight: 0.5
+    source: team
+  - src: F_CARDIOMEGALY
+    rel: located_in
+    dst: A_HEART
+    weight: 1.0
+    source: team
+  - src: F_ENLARGED_MEDIASTINUM
+    rel: located_in
+    dst: A_MEDIASTINUM
+    weight: 1.0
+    source: team
+  - src: F_FRACTURE
+    rel: located_in
+    dst: A_RIBS
+    weight: 1.0
+    source: team
+  - src: F_HERNIA
+    rel: located_in
+    dst: A_DIAPHRAGM
+    weight: 0.7
+    source: team
+  - src: F_HERNIA
+    rel: located_in
+    dst: A_MEDIASTINUM
+    weight: 0.3
+    source: team
+
+  # --- part_of: Anatomy -> Anatomy (containment hierarchy) ---
+  - src: A_RIGHT_UPPER_ZONE
+    rel: part_of
+    dst: A_RIGHT_LUNG
+    weight: 1.0
+    source: team
+  - src: A_RIGHT_MID_ZONE
+    rel: part_of
+    dst: A_RIGHT_LUNG
+    weight: 1.0
+    source: team
+  - src: A_RIGHT_LOWER_ZONE
+    rel: part_of
+    dst: A_RIGHT_LUNG
+    weight: 1.0
+    source: team
+  - src: A_LEFT_UPPER_ZONE
+    rel: part_of
+    dst: A_LEFT_LUNG
+    weight: 1.0
+    source: team
+  - src: A_LEFT_MID_ZONE
+    rel: part_of
+    dst: A_LEFT_LUNG
+    weight: 1.0
+    source: team
+  - src: A_LEFT_LOWER_ZONE
+    rel: part_of
+    dst: A_LEFT_LUNG
+    weight: 1.0
+    source: team
+  - src: A_RIGHT_COSTOPHRENIC_ANGLE
+    rel: part_of
+    dst: A_RIGHT_LOWER_ZONE
+    weight: 1.0
+    source: team
+  - src: A_LEFT_COSTOPHRENIC_ANGLE
+    rel: part_of
+    dst: A_LEFT_LOWER_ZONE
+    weight: 1.0
+    source: team
+  - src: A_HEART
+    rel: part_of
+    dst: A_MEDIASTINUM
+    weight: 1.0
+    source: team

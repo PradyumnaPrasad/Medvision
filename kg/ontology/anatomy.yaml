@@ -1,0 +1,105 @@
+# Anatomy nodes: chest regions used for localizing findings (medvision/explain/localize.py, T11).
+# Zones are the coarse grid a Grad-CAM heatmap gets assigned to; part_of edges (in relations.yaml)
+# encode the containment hierarchy (e.g. right upper zone part_of right lung).
+nodes:
+  - id: A_RIGHT_LUNG
+    type: Anatomy
+    name: Right Lung
+    aliases: [right lung field]
+    definition: "The right lung, comprising upper, mid and lower zones."
+    source: team
+
+  - id: A_LEFT_LUNG
+    type: Anatomy
+    name: Left Lung
+    aliases: [left lung field]
+    definition: "The left lung, comprising upper, mid and lower zones."
+    source: team
+
+  - id: A_RIGHT_UPPER_ZONE
+    type: Anatomy
+    name: Right Upper Zone
+    aliases: [right apex]
+    definition: "Upper third of the right lung field on a frontal chest radiograph."
+    source: team
+
+  - id: A_RIGHT_MID_ZONE
+    type: Anatomy
+    name: Right Mid Zone
+    definition: "Middle third of the right lung field on a frontal chest radiograph."
+    source: team
+
+  - id: A_RIGHT_LOWER_ZONE
+    type: Anatomy
+    name: Right Lower Zone
+    aliases: [right base]
+    definition: "Lower third of the right lung field on a frontal chest radiograph."
+    source: team
+
+  - id: A_LEFT_UPPER_ZONE
+    type: Anatomy
+    name: Left Upper Zone
+    aliases: [left apex]
+    definition: "Upper third of the left lung field on a frontal chest radiograph."
+    source: team
+
+  - id: A_LEFT_MID_ZONE
+    type: Anatomy
+    name: Left Mid Zone
+    definition: "Middle third of the left lung field on a frontal chest radiograph."
+    source: team
+
+  - id: A_LEFT_LOWER_ZONE
+    type: Anatomy
+    name: Left Lower Zone
+    aliases: [left base]
+    definition: "Lower third of the left lung field on a frontal chest radiograph."
+    source: team
+
+  - id: A_RIGHT_COSTOPHRENIC_ANGLE
+    type: Anatomy
+    name: Right Costophrenic Angle
+    definition: "The angle formed by the right diaphragm and rib cage; the earliest site of small effusions."
+    source: team
+
+  - id: A_LEFT_COSTOPHRENIC_ANGLE
+    type: Anatomy
+    name: Left Costophrenic Angle
+    definition: "The angle formed by the left diaphragm and rib cage; the earliest site of small effusions."
+    source: team
+
+  - id: A_PLEURA
+    type: Anatomy
+    name: Pleura
+    definition: "The membrane surrounding the lungs, comprising visceral and parietal layers."
+    source: team
+
+  - id: A_MEDIASTINUM
+    type: Anatomy
+    name: Mediastinum
+    definition: "The central thoracic compartment containing the heart, great vessels, trachea and esophagus."
+    source: team
+
+  - id: A_HEART
+    type: Anatomy
+    name: Cardiac Silhouette
+    definition: "The outline of the heart as seen on a frontal chest radiograph."
+    source: team
+
+  - id: A_DIAPHRAGM
+    type: Anatomy
+    name: Diaphragm
+    definition: "The muscular structure separating thoracic and abdominal cavities."
+    source: team
+
+  - id: A_RIBS
+    type: Anatomy
+    name: Rib Cage
+    definition: "The bony thoracic cage, including ribs, sternum and thoracic spine."
+    source: team
+
+  - id: A_TRACHEA
+    type: Anatomy
+    name: Trachea
+    definition: "The central airway connecting the larynx to the bronchi, normally midline."
+    source: team
