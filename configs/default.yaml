@@ -24,7 +24,9 @@ vision:
   default_uncertain_threshold: 0.3
 
 gradcam:
-  target_layer: "features.denseblock4"
+  # last layer of the DenseNet feature extractor, i.e. the final conv feature map
+  # before global-average-pool + the linear classifier head
+  target_layer: "features.norm5"
 
 qc:
   ood_similarity_threshold: 0.22
