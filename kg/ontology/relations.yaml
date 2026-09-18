@@ -32,8 +32,19 @@ edges:
   - src: F_INFILTRATION
     rel: suggestive_of
     dst: D_PNEUMONIA
-    weight: 0.6
+    weight: 0.4
     source: team
+    note: >
+      Lowered from 0.6 after reports/false_alarm_investigation.md found this single
+      edge responsible for 100% of D_PNEUMONIA false-alarm cases (Pneumonia wrongly
+      ranked #1 on 147/304 real normal chest X-rays) — "Infiltration" is a widely
+      documented nonspecific finding (it can indicate pneumonia, edema, fibrosis,
+      atelectasis and more) and had the weakest classifier AUROC of the four
+      pneumonia-correlated findings (0.731 vs 0.95+ for Consolidation/Lung Opacity).
+      0.4 was chosen (not the margin-optimal 0.3) to keep Recall@1 above 85% since
+      this is a clinician-reviewed decision-support tool, not an autonomous
+      diagnosis — a missed true case is worse here than an extra reviewed false
+      alarm. See that report for the full weight-sweep evidence.
   - src: F_INFILTRATION
     rel: suggestive_of
     dst: D_TUBERCULOSIS

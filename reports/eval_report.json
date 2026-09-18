@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-18T13:24:41.308708+00:00",
+  "generated_at": "2026-09-18T13:35:13.970970+00:00",
   "dataset": "keremberke/chest-xray-classification (HF parquet mirror of the Kermany/Mooney 'Chest X-Ray Images (Pneumonia)' dataset), full/validation split, N=1165 images (861 pneumonia, 304 normal). This is the split HELD OUT from calibration fitting (scripts/fit_calibration.py fits on full/test) \u2014 nothing reported here was seen during calibration.",
   "classification": {
     "F_PNEUMONIA_OPACITY": {
@@ -95,9 +95,9 @@
     "disease_node_id": "D_PNEUMONIA",
     "n_positive": 861,
     "n_negative": 304,
-    "recall_at_1": 0.9349593495934959,
-    "recall_at_3": 0.9825783972125436,
-    "recall_at_any": 0.9825783972125436,
-    "false_alarm_at_1": 0.48355263157894735
+    "recall_at_1": 0.8641114982578397,
+    "recall_at_3": 0.967479674796748,
+    "recall_at_any": 0.967479674796748,
+    "false_alarm_at_1": 0.3782894736842105
   }
 }

@@ -1,6 +1,6 @@
 # MEDVISION evaluation report
 
-Generated: 2026-09-18T13:24:41.309436+00:00
+Generated: 2026-09-18T13:35:13.972189+00:00
 
 Dataset: keremberke/chest-xray-classification (HF parquet mirror of the Kermany/Mooney 'Chest X-Ray Images (Pneumonia)' dataset), full/validation split, N=1165 images (861 pneumonia, 304 normal). This is the split HELD OUT from calibration fitting (scripts/fit_calibration.py fits on full/test) — nothing reported here was seen during calibration.
 
@@ -17,7 +17,7 @@ Dataset: keremberke/chest-xray-classification (HF parquet mirror of the Kermany/
 
 Disease evaluated: **D_PNEUMONIA** (861 true positive cases, 304 true negative cases)
 
-- Recall@1 (ranked #1 when truly present): **93.5%**
-- Recall@3 (ranked in top 3 when truly present): **98.3%**
-- Recall@any (appears anywhere in the ranking when truly present): **98.3%**
-- False-alarm@1 (wrongly ranked #1 on a true negative case): **48.4%**
+- Recall@1 (ranked #1 when truly present): **86.4%**
+- Recall@3 (ranked in top 3 when truly present): **96.7%**
+- Recall@any (appears anywhere in the ranking when truly present): **96.7%**
+- False-alarm@1 (wrongly ranked #1 on a true negative case): **37.8%**

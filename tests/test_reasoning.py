@@ -72,6 +72,26 @@ def test_paths_are_sorted_by_contribution_magnitude():
     assert abs(dx_paths[0].contribution) >= abs(dx_paths[1].contribution)
 
 
+def test_isolated_infiltration_no_longer_dominates_pneumonia():
+    """A weak, isolated Infiltration signal alone (the false-alarm pattern found in
+    reports/false_alarm_investigation.md — a nonspecific finding firing on genuinely
+    normal X-rays) should contribute more modestly to Pneumonia than a real specific
+    sign would, now that the edge weight reflects how nonspecific it is."""
+    graph = build_graph(ONTOLOGY_DIR, get_labels_map())
+    isolated_infiltration = score_differentials(graph, {"F_INFILTRATION": 0.6})
+    isolated_consolidation = score_differentials(graph, {"F_CONSOLIDATION": 0.6})
+
+    pneumonia_via_infiltration = next(
+        d for d in isolated_infiltration if d.node_id == "D_PNEUMONIA"
+    ).raw_score
+    pneumonia_via_consolidation = next(
+        d for d in isolated_consolidation if d.node_id == "D_PNEUMONIA"
+    ).raw_score
+
+    # consolidation is the more specific sign and should count for more evidence
+    assert pneumonia_via_consolidation > pneumonia_via_infiltration
+
+
 def test_real_ontology_produces_plausible_differentials():
     graph = build_graph(ONTOLOGY_DIR, get_labels_map())
     # simulate a classifier that strongly suspects consolidation + pneumonia-pattern opacity

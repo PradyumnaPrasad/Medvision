@@ -19,6 +19,18 @@ def test_real_ontology_is_valid():
     assert summary["edges"] >= 50
 
 
+def test_infiltration_pneumonia_weight_stays_at_evidence_based_value():
+    """Regression guard for reports/false_alarm_investigation.md: this edge was
+    lowered from 0.6 to 0.4 after real held-out data showed F_INFILTRATION alone
+    was responsible for 100% of D_PNEUMONIA's false-alarm cases. Don't let it
+    silently drift back up without re-running that investigation."""
+    graph = load_ontology(ONTOLOGY_DIR)
+    edge = next(
+        e for e in graph.out_edges("F_INFILTRATION", rel="suggestive_of") if e.dst == "D_PNEUMONIA"
+    )
+    assert edge.weight == pytest.approx(0.4)
+
+
 def test_every_label_maps_to_a_real_finding_node():
     graph = load_ontology(ONTOLOGY_DIR)
     finding_ids = {n.id for n in graph.nodes_of_type("Finding")}
