@@ -1,10 +1,12 @@
 from pathlib import Path
 
 import httpx
+import numpy as np
 import pytest
 from PIL import Image
 
 from medvision.pipeline import analyze, get_models
+from medvision.qc.ood import InvalidImageError
 
 FIXTURE = Path(__file__).parent / "fixtures" / "sample_cxr.png"
 
@@ -17,11 +19,25 @@ def force_template_report(monkeypatch):
 
 
 @pytest.mark.slow
+def test_analyze_rejects_a_color_photo_before_running_the_rest_of_the_pipeline(
+    force_template_report,
+):
+    rng = np.random.default_rng(0)
+    rgb = rng.integers(0, 255, size=(300, 300, 3), dtype=np.uint8)
+    fake_photo = Image.fromarray(rgb, mode="RGB")
+
+    with pytest.raises(InvalidImageError) as excinfo:
+        analyze(fake_photo)
+    assert not excinfo.value.result.is_valid
+
+
+@pytest.mark.slow
 def test_analyze_end_to_end(tmp_path: Path, force_template_report):
     image = Image.open(FIXTURE)
     result = analyze(image, save_dir=tmp_path)
 
     assert result.id
+    assert result.quality_warnings == []  # the real fixture is a clean chest X-ray
     assert result.findings, "expected at least one finding"
     assert all(0.0 <= f.prob <= 1.0 for f in result.findings)
     # findings sorted descending by probability

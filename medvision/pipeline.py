@@ -1,10 +1,11 @@
 """End-to-end MEDVISION inference pipeline: image in, explainable AnalysisResult out.
 
-Pipeline: classifier -> temperature-scaled calibration -> Grad-CAM -> zone
-localization -> KG differential-diagnosis scoring -> LLM narration with a citation
-verifier (falling back to a deterministic template report if the LLM is unavailable
-or fails verification). This intentionally does NOT yet include retrieval (T19-20)
-— that slots in without changing this module's public `analyze()` contract.
+Pipeline: input quality gate -> classifier -> temperature-scaled calibration ->
+Grad-CAM -> zone localization -> KG differential-diagnosis scoring -> LLM
+narration with a citation verifier (falling back to a deterministic template
+report if the LLM is unavailable or fails verification). This intentionally does
+NOT yet include retrieval (T19-20) — that slots in without changing this module's
+public `analyze()` contract.
 """
 
 from __future__ import annotations
@@ -17,7 +18,7 @@ from pathlib import Path
 from typing import Literal
 
 from PIL import Image
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from medvision.config import get_settings
 from medvision.explain.gradcam import GradCamExplainer
@@ -25,6 +26,7 @@ from medvision.explain.localize import localize
 from medvision.kg.build import build_graph
 from medvision.kg.graph import KnowledgeGraph
 from medvision.kg.reasoning import score_differentials
+from medvision.qc.ood import InvalidImageError, check_image_quality
 from medvision.reasoning.llm import OllamaClient
 from medvision.reasoning.narrate import narrate
 from medvision.reasoning.schema import EvidenceBlock, GroundingResult, LLMReport
@@ -75,6 +77,7 @@ class AnalysisResult(BaseModel):
     grounding: GroundingResult
     evidence: EvidenceBlock  # id-tagged evidence (F1, D1, K1, ...) that report cites
     report_text: str  # flattened plain-text rendering of `report`, for PDF/back-compat
+    quality_warnings: list[str] = Field(default_factory=list)  # soft QC flags; [] if none
     timings_ms: dict[str, float]
     disclaimer: str
 
@@ -166,11 +169,21 @@ def analyze(
     there as heatmap_<node_id>.png, and FindingOut.heatmap_path is set to that filename.
     Callers that need to know the id up front (e.g. to name save_dir after it) can pass
     result_id explicitly instead of letting analyze() generate one.
+
+    Raises medvision.qc.ood.InvalidImageError if the image fails the input-quality gate
+    (e.g. it's a color photo, not a grayscale radiograph) — callers should not run the
+    rest of the pipeline on an image that failed this check.
     """
     settings = get_settings()
     models = get_models()
     timings: dict[str, float] = {}
     result_id = result_id or str(uuid.uuid4())
+
+    t0 = time.perf_counter()
+    quality = check_image_quality(image)
+    timings["qc_ms"] = (time.perf_counter() - t0) * 1000
+    if not quality.is_valid:
+        raise InvalidImageError(quality)
 
     t0 = time.perf_counter()
     predictions = models.classifier.predict(image)
@@ -261,6 +274,7 @@ def analyze(
         grounding=narration.grounding,
         evidence=narration.evidence,
         report_text=report_text,
+        quality_warnings=quality.flags,  # empty when quality.is_valid with no soft flags
         timings_ms=timings,
         disclaimer=settings.disclaimer,
     )

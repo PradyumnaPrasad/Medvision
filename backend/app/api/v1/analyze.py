@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 import json
+import shutil
 import time
 import uuid
 from pathlib import Path
@@ -17,6 +18,7 @@ from backend.app.db import AnalysisRecord, FeedbackRecord, get_session
 from backend.app.schemas import AnalysisSummary, FeedbackIn, FeedbackOut
 from medvision.config import get_settings
 from medvision.pipeline import AnalysisResult, analyze
+from medvision.qc.ood import InvalidImageError
 
 router = APIRouter(tags=["analyze"])
 
@@ -58,7 +60,14 @@ async def analyze_image(
     save_dir.mkdir(parents=True, exist_ok=True)
     image.convert("RGB").save(save_dir / "original.png")
 
-    result = analyze(image, save_dir=save_dir, result_id=result_id)
+    try:
+        result = analyze(image, save_dir=save_dir, result_id=result_id)
+    except InvalidImageError as exc:
+        shutil.rmtree(save_dir, ignore_errors=True)
+        raise HTTPException(
+            status_code=400,
+            detail=f"This doesn't look like a usable chest X-ray: {exc}",
+        ) from exc
 
     record = AnalysisRecord(
         id=result.id,

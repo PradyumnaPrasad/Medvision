@@ -1,8 +1,11 @@
+import io
 import shutil
 from pathlib import Path
 
+import numpy as np
 import pytest
 from fastapi.testclient import TestClient
+from PIL import Image
 
 from medvision.config import get_settings
 
@@ -64,6 +67,22 @@ def test_analyze_rejects_dicom_for_now(client):
         "/api/v1/analyze", files={"file": ("scan.dcm", b"fake", "application/dicom")}
     )
     assert response.status_code == 400
+
+
+@pytest.mark.slow
+def test_analyze_rejects_a_color_photo_via_the_quality_gate(client):
+    rng = np.random.default_rng(0)
+    rgb = rng.integers(0, 255, size=(300, 300, 3), dtype=np.uint8)
+    fake_photo = Image.fromarray(rgb, mode="RGB")
+    buf = io.BytesIO()
+    fake_photo.save(buf, format="PNG")
+    buf.seek(0)
+
+    response = client.post(
+        "/api/v1/analyze", files={"file": ("photo.png", buf, "image/png")}
+    )
+    assert response.status_code == 400
+    assert "doesn't look like a usable chest X-ray" in response.json()["detail"]
 
 
 @pytest.mark.slow

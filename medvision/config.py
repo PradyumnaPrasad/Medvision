@@ -51,8 +51,12 @@ class GradCamConfig(BaseModel):
 
 
 class QcConfig(BaseModel):
-    ood_similarity_threshold: float = 0.22
     min_resolution: int = 128
+    max_color_variance: float = 8.0
+    min_contrast_std: float = 15.0
+    aspect_ratio_min: float = 0.4
+    aspect_ratio_max: float = 2.5
+    ood_similarity_threshold: float = 0.22  # reserved for a future BiomedCLIP-based check (T16)
 
 
 class KgReasoningConfig(BaseModel):

@@ -29,8 +29,18 @@ gradcam:
   target_layer: "features.norm5"
 
 qc:
-  ood_similarity_threshold: 0.22
   min_resolution: 128
+  # Real chest X-rays measured here are grayscale medical images stored as RGB, so
+  # their R/G/B channels are ~identical (color_variance ~0.0). A real color photo
+  # measured ~110 on the same metric. See reports/ood_gate_calibration.md.
+  max_color_variance: 8.0
+  min_contrast_std: 15.0 # guards against blank/near-uniform images
+  aspect_ratio_min: 0.4
+  aspect_ratio_max: 2.5
+  # Reserved for a BiomedCLIP-embedding-based OOD check once T16 is built; the
+  # heuristic checks above catch color photos but not grayscale non-CXR images
+  # (e.g. a different body part), which this would catch. Unused today.
+  ood_similarity_threshold: 0.22
 
 kg:
   reasoning:
