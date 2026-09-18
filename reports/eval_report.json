@@ -1,0 +1,103 @@
+{
+  "generated_at": "2026-09-18T13:24:41.308708+00:00",
+  "dataset": "keremberke/chest-xray-classification (HF parquet mirror of the Kermany/Mooney 'Chest X-Ray Images (Pneumonia)' dataset), full/validation split, N=1165 images (861 pneumonia, 304 normal). This is the split HELD OUT from calibration fitting (scripts/fit_calibration.py fits on full/test) \u2014 nothing reported here was seen during calibration.",
+  "classification": {
+    "F_PNEUMONIA_OPACITY": {
+      "raw": {
+        "n": 1165,
+        "n_positive": 861,
+        "auroc": 0.7093877987652057,
+        "precision": 0.9468085106382979,
+        "recall": 0.2067363530778165,
+        "f1": 0.3393708293612965,
+        "ece": 0.5708197972950473,
+        "threshold": 0.5
+      },
+      "calibrated": {
+        "n": 1165,
+        "n_positive": 861,
+        "auroc": 0.7093877987652057,
+        "precision": 0.9468085106382979,
+        "recall": 0.2067363530778165,
+        "f1": 0.3393708293612965,
+        "ece": 0.5708197972950473,
+        "threshold": 0.5
+      }
+    },
+    "F_CONSOLIDATION": {
+      "raw": {
+        "n": 1165,
+        "n_positive": 861,
+        "auroc": 0.9472079589216944,
+        "precision": 0.9617918313570487,
+        "recall": 0.8478513356562137,
+        "f1": 0.9012345679012346,
+        "ece": 0.30811945657073936,
+        "threshold": 0.5
+      },
+      "calibrated": {
+        "n": 1165,
+        "n_positive": 861,
+        "auroc": 0.9472079589216944,
+        "precision": 0.9617918313570487,
+        "recall": 0.8478513356562137,
+        "f1": 0.9012345679012346,
+        "ece": 0.30811945657073936,
+        "threshold": 0.5
+      }
+    },
+    "F_INFILTRATION": {
+      "raw": {
+        "n": 1165,
+        "n_positive": 861,
+        "auroc": 0.7305496974142673,
+        "precision": 0.7462154942119323,
+        "recall": 0.9732868757259001,
+        "f1": 0.844758064516129,
+        "ece": 0.1675974374485118,
+        "threshold": 0.5
+      },
+      "calibrated": {
+        "n": 1165,
+        "n_positive": 861,
+        "auroc": 0.7305496974142673,
+        "precision": 0.7462154942119323,
+        "recall": 0.9732868757259001,
+        "f1": 0.844758064516129,
+        "ece": 0.06250084020163663,
+        "threshold": 0.5
+      }
+    },
+    "F_LUNG_OPACITY": {
+      "raw": {
+        "n": 1165,
+        "n_positive": 861,
+        "auroc": 0.945733235527844,
+        "precision": 0.8593117408906883,
+        "recall": 0.9860627177700348,
+        "f1": 0.918334234721471,
+        "ece": 0.1440082648968876,
+        "threshold": 0.5
+      },
+      "calibrated": {
+        "n": 1165,
+        "n_positive": 861,
+        "auroc": 0.945733235527844,
+        "precision": 0.8593117408906883,
+        "recall": 0.9860627177700348,
+        "f1": 0.918334234721471,
+        "ece": 0.04737186605151066,
+        "threshold": 0.5
+      }
+    }
+  },
+  "differential": {
+    "disease_node_id": "D_PNEUMONIA",
+    "n_positive": 861,
+    "n_negative": 304,
+    "recall_at_1": 0.9349593495934959,
+    "recall_at_3": 0.9825783972125436,
+    "recall_at_any": 0.9825783972125436,
+    "false_alarm_at_1": 0.48355263157894735
+  }
+}

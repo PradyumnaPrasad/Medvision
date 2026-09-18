@@ -15,16 +15,14 @@ Usage: uv run python scripts/fit_calibration.py
 
 from __future__ import annotations
 
-import io
 import time
 from datetime import UTC, datetime
-from pathlib import Path
 
 import numpy as np
-import pyarrow.parquet as pq
 from PIL import Image
 
 from medvision.config import get_settings
+from medvision.eval.data import load_pneumonia_split
 from medvision.vision.calibrate import CalibrationData, expected_calibration_error, fit_temperature
 from medvision.vision.classifier import ChestXrayClassifier
 
@@ -39,14 +37,6 @@ DATASET_DESCRIPTION = (
     "temperature, full/validation split (N={n_eval}) held out for evaluation. Binary "
     "Normal(0)/Pneumonia(1) label used as ground truth for pneumonia-correlated findings only."
 )
-
-
-def _load_split(path: Path) -> tuple[list[Image.Image], np.ndarray]:
-    table = pq.read_table(path, columns=["image", "labels"])
-    df = table.to_pandas()
-    images = [Image.open(io.BytesIO(row["bytes"])).convert("RGB") for row in df["image"]]
-    labels = df["labels"].to_numpy().astype(np.float64)  # 0=Normal, 1=Pneumonia
-    return images, labels
 
 
 def _predict_all(
@@ -78,9 +68,9 @@ def main() -> None:
         )
 
     print(f"Loading fit split from {fit_path} ...")
-    fit_images, fit_labels = _load_split(fit_path)
+    fit_images, fit_labels = load_pneumonia_split(fit_path)
     print(f"Loading eval split from {eval_path} ...")
-    eval_images, eval_labels = _load_split(eval_path)
+    eval_images, eval_labels = load_pneumonia_split(eval_path)
     print(
         f"Fit: {len(fit_images)} images ({int(fit_labels.sum())} pneumonia). "
         f"Eval: {len(eval_images)} images ({int(eval_labels.sum())} pneumonia)."
