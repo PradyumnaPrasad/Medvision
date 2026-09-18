@@ -96,6 +96,7 @@ export interface AnalysisResult {
   grounding: GroundingResult;
   evidence: EvidenceBlock;
   report_text: string;
+  quality_warnings: string[]; // soft QC flags, e.g. an unusual aspect ratio; [] if none
   timings_ms: Record<string, number>;
   disclaimer: string;
 }
