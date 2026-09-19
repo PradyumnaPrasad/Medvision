@@ -4,6 +4,7 @@ import { DifferentialsPanel } from "./components/DifferentialsPanel";
 import { DisclaimerBanner } from "./components/DisclaimerBanner";
 import { FindingsTable } from "./components/FindingsTable";
 import { HistorySidebar } from "./components/HistorySidebar";
+import { AlertIcon, LungsIcon } from "./components/icons";
 import { ImageViewer } from "./components/ImageViewer";
 import { QualityWarningBanner } from "./components/QualityWarningBanner";
 import { ReportPanel } from "./components/ReportPanel";
@@ -71,11 +72,16 @@ function App() {
         text={health?.disclaimer ?? "Research prototype. Not for clinical use."}
       />
 
-      <header className="max-w-7xl mx-auto px-4 pt-6 pb-2 w-full">
-        <h1 className="text-2xl font-bold text-slate-900">MEDVISION</h1>
-        <p className="text-slate-500 text-sm">
-          Knowledge-graph anchored vision-reasoning framework for explainable clinical diagnosis
-        </p>
+      <header className="max-w-7xl mx-auto px-4 pt-6 pb-3 w-full flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center shrink-0">
+          <LungsIcon className="w-6 h-6" />
+        </div>
+        <div>
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight">MEDVISION</h1>
+          <p className="text-slate-500 text-xs sm:text-sm">
+            Knowledge-graph anchored vision-reasoning framework for explainable clinical diagnosis
+          </p>
+        </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 pb-10 w-full flex-1 grid grid-cols-1 lg:grid-cols-[260px_1fr_1fr] gap-4 items-start">
@@ -89,21 +95,25 @@ function App() {
         </aside>
 
         {error && (
-          <div className="lg:col-span-2 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl px-4 py-3 text-sm flex items-start gap-2">
-            <span>⚠️</span>
+          <div className="lg:col-span-2 mv-card mv-fade-in bg-rose-50/60 border-rose-200 text-rose-700 px-4 py-3.5 text-sm flex items-start gap-2.5">
+            <AlertIcon className="w-4 h-4 mt-0.5 shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         {!error && !result && !loading && (
-          <div className="lg:col-span-2 flex items-center justify-center text-slate-400 text-sm border border-dashed border-slate-200 rounded-xl min-h-[200px]">
-            Upload a chest X-ray to see explainable findings and a differential diagnosis.
+          <div className="lg:col-span-2 flex flex-col items-center justify-center gap-3 text-center text-slate-400 text-sm border-2 border-dashed border-slate-200 rounded-2xl min-h-[280px] px-8">
+            <LungsIcon className="w-10 h-10 opacity-40" />
+            <p className="max-w-xs">
+              Upload a chest X-ray to see explainable findings, a differential diagnosis, and a
+              cited draft report.
+            </p>
           </div>
         )}
 
         {!error && result && (
           <>
-            <div className="space-y-4">
+            <div className="space-y-4 mv-fade-in">
               {result.quality_warnings.length > 0 && (
                 <QualityWarningBanner warnings={result.quality_warnings} />
               )}
@@ -119,7 +129,7 @@ function App() {
                 onSelect={setSelectedNodeId}
               />
             </div>
-            <div className="space-y-4">
+            <div className="space-y-4 mv-fade-in">
               <DifferentialsPanel differentials={result.differentials} />
               <ReportPanel
                 report={result.report}

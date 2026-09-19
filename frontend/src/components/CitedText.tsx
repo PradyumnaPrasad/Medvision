@@ -29,7 +29,7 @@ export function CitedText({ text, evidenceIds, evidence }: Props) {
       {text}{" "}
       {evidenceIds.map((id) => (
         <sup key={id} title={resolveEvidenceLabel(id, evidence)}>
-          <span className="ml-0.5 inline-block px-1 rounded bg-indigo-100 text-indigo-700 text-[10px] font-mono cursor-help align-super">
+          <span className="ml-0.5 inline-block px-1 rounded-md bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100 text-[10px] font-mono cursor-help align-super hover:bg-indigo-100 transition-colors">
             {id}
           </span>
         </sup>

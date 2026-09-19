@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { UploadCloudIcon } from "./icons";
 
 interface Props {
   onFileSelected: (file: File) => void;
@@ -73,9 +74,15 @@ export function UploadPanel({ onFileSelected, loading }: Props) {
 
   return (
     <div
-      className={`rounded-xl border-2 border-dashed p-8 text-center transition-colors ${
+      className={`rounded-2xl border-2 border-dashed p-7 text-center transition-all ${
         loading ? "cursor-wait border-slate-200 bg-slate-50" : "cursor-pointer"
-      } ${dragOver && !loading ? "border-sky-500 bg-sky-50" : !loading ? "border-slate-300 bg-white" : ""}`}
+      } ${
+        dragOver && !loading
+          ? "border-sky-400 bg-sky-50 scale-[1.01]"
+          : !loading
+            ? "border-slate-300 bg-white hover:border-sky-300 hover:bg-sky-50/40"
+            : ""
+      }`}
       onClick={() => !loading && inputRef.current?.click()}
       onDragOver={(e) => {
         e.preventDefault();
@@ -97,17 +104,20 @@ export function UploadPanel({ onFileSelected, loading }: Props) {
         onChange={(e) => handleFiles(e.target.files)}
       />
       {loading ? (
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col items-center gap-2.5">
           <Spinner />
-          <p className="text-slate-600 text-sm">{stageMessage}</p>
+          <p className="text-slate-600 text-sm mv-fade-in" key={stageMessage}>
+            {stageMessage}
+          </p>
         </div>
       ) : (
-        <>
-          <p className="text-slate-700 font-medium">
+        <div className="flex flex-col items-center gap-2">
+          <UploadCloudIcon className="w-8 h-8 text-sky-400" />
+          <p className="text-slate-700 font-medium text-sm">
             Drop a chest X-ray here, or click to choose a file
           </p>
-          <p className="text-slate-400 text-sm mt-1">PNG or JPG. DICOM support coming soon.</p>
-        </>
+          <p className="text-slate-400 text-xs">PNG or JPG · DICOM support coming soon</p>
+        </div>
       )}
     </div>
   );

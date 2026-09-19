@@ -11,8 +11,8 @@ export function ImageViewer({ analysisId, selectedNodeId, selectedLabel }: Props
   const [opacity, setOpacity] = useState(0.6);
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-3">
-      <div className="relative w-full aspect-square bg-black rounded-lg overflow-hidden">
+    <div className="mv-card p-3">
+      <div className="relative w-full aspect-square bg-slate-950 rounded-xl overflow-hidden ring-1 ring-inset ring-white/5">
         <img
           src={originalImageUrl(analysisId)}
           alt="Chest X-ray"
@@ -20,16 +20,26 @@ export function ImageViewer({ analysisId, selectedNodeId, selectedLabel }: Props
         />
         {selectedNodeId && (
           <img
+            key={selectedNodeId}
             src={heatmapUrl(analysisId, selectedNodeId)}
             alt={`Grad-CAM heatmap for ${selectedLabel ?? selectedNodeId}`}
-            className="absolute inset-0 w-full h-full object-contain"
+            className="absolute inset-0 w-full h-full object-contain mv-fade-in"
             style={{ opacity }}
           />
         )}
       </div>
       <div className="flex items-center gap-3 mt-3 text-sm text-slate-600">
-        <span className="whitespace-nowrap">
-          {selectedNodeId ? `Heatmap: ${selectedLabel}` : "No finding selected"}
+        <span className="whitespace-nowrap flex items-center gap-1.5">
+          {selectedNodeId && (
+            <span className="w-2 h-2 rounded-full bg-gradient-to-br from-amber-400 to-rose-500 shrink-0" />
+          )}
+          {selectedNodeId ? (
+            <>
+              Heatmap: <span className="font-medium text-slate-800">{selectedLabel}</span>
+            </>
+          ) : (
+            "No finding selected"
+          )}
         </span>
         {selectedNodeId && (
           <input
@@ -39,7 +49,7 @@ export function ImageViewer({ analysisId, selectedNodeId, selectedLabel }: Props
             step={0.05}
             value={opacity}
             onChange={(e) => setOpacity(Number(e.target.value))}
-            className="flex-1"
+            className="flex-1 accent-sky-500"
           />
         )}
       </div>

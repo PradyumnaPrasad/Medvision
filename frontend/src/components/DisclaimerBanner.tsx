@@ -1,7 +1,10 @@
+import { AlertIcon } from "./icons";
+
 export function DisclaimerBanner({ text }: { text: string }) {
   return (
-    <div className="w-full bg-amber-100 border-b border-amber-300 text-amber-900 text-sm px-4 py-2 text-center">
-      ⚠️ {text}
+    <div className="w-full bg-amber-50 border-b border-amber-200 text-amber-900 text-xs sm:text-sm px-4 py-2 text-center flex items-center justify-center gap-1.5">
+      <AlertIcon className="w-3.5 h-3.5 shrink-0 text-amber-500" />
+      <span>{text}</span>
     </div>
   );
 }

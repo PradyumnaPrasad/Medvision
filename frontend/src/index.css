@@ -2,8 +2,45 @@
 
 :root {
   color-scheme: light;
+  --mv-bg-from: #f8fafc;
+  --mv-bg-to: #eef2f9;
+}
+
+* {
+  scrollbar-width: thin;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  @apply bg-slate-50 text-slate-900;
+  @apply text-slate-900;
+  background: linear-gradient(180deg, var(--mv-bg-from) 0%, var(--mv-bg-to) 100%) fixed;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* consistent card surface used across panels */
+.mv-card {
+  @apply bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.06)];
+}
+
+.mv-card-header {
+  @apply px-4 py-3 border-b border-slate-100 flex items-center gap-2 font-semibold text-slate-800 text-sm;
+}
+
+@keyframes mv-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mv-fade-in {
+  animation: mv-fade-in 0.25s ease-out;
 }
