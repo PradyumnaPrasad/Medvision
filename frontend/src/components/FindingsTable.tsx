@@ -11,9 +11,12 @@ interface Props {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  present: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
-  possible: "bg-amber-50 text-amber-700 ring-1 ring-amber-200",
-  absent: "bg-slate-50 text-slate-400 ring-1 ring-slate-200",
+  present:
+    "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/30",
+  possible:
+    "bg-amber-50 text-amber-700 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/30",
+  absent:
+    "bg-slate-50 text-slate-400 ring-1 ring-slate-200 dark:bg-white/5 dark:text-slate-500 dark:ring-white/10",
 };
 
 function formatRegion(region: string | null): string {
@@ -74,14 +77,16 @@ export function FindingsTable({ analysisId, findings, selectedNodeId, onSelect }
               <tr
                 key={f.node_id}
                 onClick={() => clickable && onSelect(f.node_id)}
-                className={`border-t border-l-2 border-slate-50 transition-colors ${
-                  clickable ? "cursor-pointer hover:bg-sky-50/70" : "opacity-60"
-                } ${isSelected ? "bg-sky-50 border-l-sky-500" : "border-l-transparent"}`}
+                className={`border-t border-l-2 border-slate-50 dark:border-white/5 transition-colors ${
+                  clickable ? "cursor-pointer hover:bg-sky-50/70 dark:hover:bg-sky-500/10" : "opacity-60"
+                } ${isSelected ? "bg-sky-50 border-l-sky-500 dark:bg-sky-500/10" : "border-l-transparent"}`}
               >
-                <td className="px-4 py-2.5 text-slate-800 font-medium">{f.name}</td>
+                <td className="px-4 py-2.5 text-slate-800 dark:text-slate-100 font-medium">
+                  {f.name}
+                </td>
                 <td className="px-4 py-2.5 w-40">
                   <div className="flex items-center gap-2">
-                    <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="flex-1 h-1.5 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all ${
                           f.status === "present"
@@ -126,14 +131,14 @@ export function FindingsTable({ analysisId, findings, selectedNodeId, onSelect }
                       <div className="flex gap-1">
                         <button
                           onClick={() => giveFeedback(f.node_id, "agree")}
-                          className="text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md p-1.5 transition-colors"
+                          className="text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-400 rounded-md p-1.5 transition-colors"
                           title="Agree with this finding"
                         >
                           <ThumbsUpIcon />
                         </button>
                         <button
                           onClick={() => giveFeedback(f.node_id, "disagree")}
-                          className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md p-1.5 transition-colors"
+                          className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 dark:hover:text-rose-400 rounded-md p-1.5 transition-colors"
                           title="Disagree with this finding"
                         >
                           <ThumbsDownIcon />
@@ -152,7 +157,7 @@ export function FindingsTable({ analysisId, findings, selectedNodeId, onSelect }
       {hidden.length > 0 && (
         <button
           onClick={() => setShowAll((v) => !v)}
-          className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-medium text-slate-500 hover:bg-slate-50 border-t border-slate-100 transition-colors"
+          className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-medium text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5 border-t border-slate-100 dark:border-white/10 transition-colors"
         >
           <ChevronDownIcon
             className={`w-3.5 h-3.5 transition-transform ${showAll ? "rotate-180" : ""}`}
@@ -161,7 +166,7 @@ export function FindingsTable({ analysisId, findings, selectedNodeId, onSelect }
         </button>
       )}
       {hasCalibrated && (
-        <div className="px-4 py-2 text-xs text-slate-400 border-t border-slate-50">
+        <div className="px-4 py-2 text-xs text-slate-400 border-t border-slate-50 dark:border-white/5">
           <sup className="text-indigo-400">*</sup> calibrated against real labeled data — hover a
           percentage to see the raw model output
         </div>

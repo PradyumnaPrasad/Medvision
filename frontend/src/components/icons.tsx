@@ -90,22 +90,19 @@ export function GraphIcon({ className = "w-4 h-4" }: IconProps) {
   );
 }
 
-export function LungsIcon({ className = "w-6 h-6" }: IconProps) {
+/** MEDVISION's mark: a simple 3-node graph (two findings feeding one diagnosis) —
+ * matches public/favicon.svg and the project's actual "knowledge graph" identity
+ * more directly than a literal anatomy icon, and is simpler to render (3 lines,
+ * 3 circles, no curves). */
+export function LogoMarkIcon({ className = "w-6 h-6" }: IconProps) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" width="1em" height="1em" className={className}>
-      <path
-        d="M9.5 5c-1.1 0-2 1.2-2 3v3.25c0 1-.3 1.5-.8 2.3C5.9 14.65 5 16.5 5 18.75 5 21.1 6.8 23 9.5 23c2 0 3-1.1 3-3v-4.5"
-        stroke="#38bdf8"
-        strokeWidth={1.6}
-        strokeLinecap="round"
-      />
-      <path
-        d="M14.5 5c1.1 0 2 1.2 2 3v3.25c0 1 .3 1.5.8 2.3.8 1.1 1.7 2.95 1.7 5.2 0 2.35-1.8 4.25-4.5 4.25-2 0-3-1.1-3-3v-4.5"
-        stroke="#38bdf8"
-        strokeWidth={1.6}
-        strokeLinecap="round"
-      />
-      <circle cx="12" cy="6.5" r="1.6" fill="#4ade80" />
+    <svg viewBox="0 0 48 48" width="1em" height="1em" className={className}>
+      <line x1="14" y1="16" x2="24" y2="30" stroke="#38bdf8" strokeWidth={2.5} />
+      <line x1="34" y1="16" x2="24" y2="30" stroke="#38bdf8" strokeWidth={2.5} />
+      <line x1="14" y1="16" x2="34" y2="16" stroke="#38bdf8" strokeWidth={2.5} opacity={0.5} />
+      <circle cx="14" cy="16" r="4.5" fill="#38bdf8" />
+      <circle cx="34" cy="16" r="4.5" fill="#38bdf8" />
+      <circle cx="24" cy="30" r="5.5" fill="#4ade80" />
     </svg>
   );
 }
@@ -119,6 +116,38 @@ export function DocumentIcon({ className = "w-4 h-4" }: IconProps) {
         strokeLinejoin="round"
       />
       <path d="M9 12h6M9 15.5h6M9 8.5h2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function SunIcon({ className = "w-4 h-4" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" width="1em" height="1em" className={className} stroke="currentColor" strokeWidth={1.8}>
+      <circle cx="12" cy="12" r="4.5" />
+      <path
+        d="M12 2.5v2.3M12 19.2v2.3M4.4 4.4l1.6 1.6M18 18l1.6 1.6M2.5 12h2.3M19.2 12h2.3M4.4 19.6 6 18M18 6l1.6-1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+export function MoonIcon({ className = "w-4 h-4" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" width="1em" height="1em" className={className} stroke="currentColor" strokeWidth={1.8}>
+      <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function SparkleIcon({ className = "w-4 h-4" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" width="1em" height="1em" className={className} stroke="currentColor" strokeWidth={1.8}>
+      <path
+        d="M12 3v3M12 18v3M4.5 12h3M16.5 12h3M6.5 6.5l2 2M15.5 15.5l2 2M17.5 6.5l-2 2M8.5 15.5l-2 2"
+        strokeLinecap="round"
+      />
+      <circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none" />
     </svg>
   );
 }

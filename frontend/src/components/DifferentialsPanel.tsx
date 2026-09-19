@@ -22,21 +22,22 @@ function EvidencePath({
   const positive = contribution >= 0;
   return (
     <div className="flex items-center gap-2 text-xs flex-wrap">
-      <span className="shrink-0 px-2 py-1 rounded-lg bg-sky-50 text-sky-700 ring-1 ring-sky-100 font-medium whitespace-nowrap">
+      <span className="shrink-0 px-2 py-1 rounded-lg bg-sky-50 text-sky-700 ring-1 ring-sky-100 font-medium whitespace-nowrap dark:bg-sky-500/10 dark:text-sky-300 dark:ring-sky-500/20">
         {findingName}
         <span className="text-sky-400 font-normal"> {(findingProb * 100).toFixed(0)}%</span>
       </span>
 
       <span
-        className={`shrink-0 h-px w-4 sm:w-8 ${relation === "contradicts" ? "bg-rose-300" : "bg-indigo-300"}`}
+        className={`shrink-0 h-px w-4 sm:w-8 ${relation === "contradicts" ? "bg-rose-300 dark:bg-rose-500/40" : "bg-indigo-300 dark:bg-indigo-500/40"}`}
       />
 
       <span className="shrink-0 text-slate-400 whitespace-nowrap">
-        {relationLabel(relation)} <span className="text-slate-300">(w={weight.toFixed(2)})</span>
+        {relationLabel(relation)}{" "}
+        <span className="text-slate-300 dark:text-slate-600">(w={weight.toFixed(2)})</span>
       </span>
 
       <span
-        className={`shrink-0 font-mono ml-auto pl-2 ${positive ? "text-emerald-600" : "text-rose-600"}`}
+        className={`shrink-0 font-mono ml-auto pl-2 ${positive ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}
       >
         {positive ? "+" : ""}
         {contribution.toFixed(3)}
@@ -63,26 +64,28 @@ export function DifferentialsPanel({ differentials }: { differentials: Different
         Differential diagnoses
         <span className="text-slate-400 font-normal text-xs">(knowledge-graph reasoning)</span>
       </div>
-      <div className="divide-y divide-slate-50">
+      <div className="divide-y divide-slate-50 dark:divide-white/5">
         {differentials.map((d, i) => {
           const isOpen = expanded === d.node_id;
           return (
             <div key={d.node_id}>
               <button
                 onClick={() => setExpanded(isOpen ? null : d.node_id)}
-                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50/70 transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50/70 dark:hover:bg-white/5 transition-colors"
               >
                 <span
                   className={`text-xs w-5 h-5 rounded-full flex items-center justify-center font-semibold shrink-0 ${
                     i === 0
-                      ? "bg-indigo-100 text-indigo-700"
-                      : "bg-slate-100 text-slate-500"
+                      ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300"
+                      : "bg-slate-100 text-slate-500 dark:bg-white/10 dark:text-slate-400"
                   }`}
                 >
                   {i + 1}
                 </span>
-                <span className="flex-1 text-slate-800 font-medium">{d.name}</span>
-                <div className="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden hidden sm:block">
+                <span className="flex-1 text-slate-800 dark:text-slate-100 font-medium">
+                  {d.name}
+                </span>
+                <div className="w-24 h-1.5 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden hidden sm:block">
                   <div
                     className="h-full bg-indigo-500 rounded-full"
                     style={{ width: `${Math.round(d.score * 100)}%` }}

@@ -33,13 +33,13 @@ export function ReportPanel({ report, report_source, grounding, evidence, timing
     <div className="mv-card p-4 space-y-4">
       <div className="flex items-center gap-2">
         <DocumentIcon className="w-4 h-4 text-slate-400" />
-        <div className="font-semibold text-slate-800">Draft report</div>
+        <div className="font-semibold text-slate-800 dark:text-slate-100">Draft report</div>
       </div>
 
       <GroundingBadge source={report_source} grounding={grounding} />
 
       <Section title="Findings" accent="bg-sky-300">
-        <div className="space-y-1 text-sm text-slate-700 leading-relaxed">
+        <div className="space-y-1 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
           {report.findings.length === 0 && (
             <p className="text-slate-400">No findings met the reporting threshold.</p>
           )}
@@ -52,7 +52,7 @@ export function ReportPanel({ report, report_source, grounding, evidence, timing
       </Section>
 
       <Section title="Impression" accent="bg-indigo-300">
-        <div className="space-y-1 text-sm text-slate-700 leading-relaxed">
+        <div className="space-y-1 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
           {report.impression.length === 0 && (
             <p className="text-slate-400">No impression could be generated.</p>
           )}
@@ -69,8 +69,8 @@ export function ReportPanel({ report, report_source, grounding, evidence, timing
           <div className="space-y-2">
             {report.differentials.map((item, i) => (
               <div key={i} className="text-sm">
-                <span className="font-medium text-slate-800">{item.diagnosis}: </span>
-                <span className="text-slate-600">
+                <span className="font-medium text-slate-800 dark:text-slate-100">{item.diagnosis}: </span>
+                <span className="text-slate-600 dark:text-slate-300">
                   <CitedText
                     text={item.rationale}
                     evidenceIds={item.evidence_ids}
@@ -85,7 +85,7 @@ export function ReportPanel({ report, report_source, grounding, evidence, timing
 
       {report.limitations.length > 0 && (
         <Section title="Limitations" accent="bg-slate-300">
-          <ul className="list-disc list-inside text-sm text-slate-600 space-y-0.5">
+          <ul className="list-disc list-inside text-sm text-slate-600 dark:text-slate-300 space-y-0.5">
             {report.limitations.map((lim, i) => (
               <li key={i}>{lim}</li>
             ))}
@@ -94,10 +94,10 @@ export function ReportPanel({ report, report_source, grounding, evidence, timing
       )}
 
       <Section title="Recommendation" accent="bg-emerald-300">
-        <p className="text-sm text-slate-700">{report.recommendation}</p>
+        <p className="text-sm text-slate-700 dark:text-slate-300">{report.recommendation}</p>
       </Section>
 
-      <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
+      <div className="pt-3 border-t border-slate-100 dark:border-white/10 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
         <ClockIcon className="w-3 h-3" />
         {Object.entries(timings_ms).map(([key, value]) => (
           <span key={key} className="tabular-nums">

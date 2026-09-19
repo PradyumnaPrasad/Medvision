@@ -1,9 +1,25 @@
 @import "tailwindcss";
 
+/* Tailwind v4 class-based dark mode: toggled by adding/removing `.dark` on <html>
+   (see App.tsx's theme toggle), not just prefers-color-scheme. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   color-scheme: light;
   --mv-bg-from: #f8fafc;
   --mv-bg-to: #eef2f9;
+  --mv-surface: #ffffff;
+  --mv-border: rgba(15, 23, 42, 0.1);
+  --mv-border-strong: rgba(15, 23, 42, 0.16);
+}
+
+:root.dark {
+  color-scheme: dark;
+  --mv-bg-from: #0b1220;
+  --mv-bg-to: #060a13;
+  --mv-surface: #111a2c;
+  --mv-border: rgba(255, 255, 255, 0.08);
+  --mv-border-strong: rgba(255, 255, 255, 0.14);
 }
 
 * {
@@ -15,19 +31,30 @@ html {
 }
 
 body {
-  @apply text-slate-900;
+  @apply text-slate-900 dark:text-slate-100;
   background: linear-gradient(180deg, var(--mv-bg-from) 0%, var(--mv-bg-to) 100%) fixed;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  transition: background-color 0.2s ease;
 }
 
-/* consistent card surface used across panels */
+/* consistent card surface used across panels — CSS-variable driven so every panel
+   gets dark mode automatically without a `dark:` class on each one */
 .mv-card {
-  @apply bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.06)];
+  background: var(--mv-surface);
+  border: 1px solid var(--mv-border);
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
 }
 
 .mv-card-header {
-  @apply px-4 py-3 border-b border-slate-100 flex items-center gap-2 font-semibold text-slate-800 text-sm;
+  @apply px-4 py-3 flex items-center gap-2 font-semibold text-sm;
+  border-bottom: 1px solid var(--mv-border);
+  color: var(--mv-heading, #1e293b);
+}
+
+:root.dark .mv-card-header {
+  --mv-heading: #e2e8f0;
 }
 
 @keyframes mv-fade-in {

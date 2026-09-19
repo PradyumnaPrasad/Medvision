@@ -75,12 +75,14 @@ export function UploadPanel({ onFileSelected, loading }: Props) {
   return (
     <div
       className={`rounded-2xl border-2 border-dashed p-7 text-center transition-all ${
-        loading ? "cursor-wait border-slate-200 bg-slate-50" : "cursor-pointer"
+        loading
+          ? "cursor-wait border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5"
+          : "cursor-pointer"
       } ${
         dragOver && !loading
-          ? "border-sky-400 bg-sky-50 scale-[1.01]"
+          ? "border-sky-400 bg-sky-50 scale-[1.01] dark:bg-sky-500/10"
           : !loading
-            ? "border-slate-300 bg-white hover:border-sky-300 hover:bg-sky-50/40"
+            ? "border-slate-300 bg-white hover:border-sky-300 hover:bg-sky-50/40 dark:border-white/15 dark:bg-white/[0.03] dark:hover:border-sky-500/40 dark:hover:bg-sky-500/5"
             : ""
       }`}
       onClick={() => !loading && inputRef.current?.click()}
@@ -106,17 +108,17 @@ export function UploadPanel({ onFileSelected, loading }: Props) {
       {loading ? (
         <div className="flex flex-col items-center gap-2.5">
           <Spinner />
-          <p className="text-slate-600 text-sm mv-fade-in" key={stageMessage}>
+          <p className="text-slate-600 dark:text-slate-300 text-sm mv-fade-in" key={stageMessage}>
             {stageMessage}
           </p>
         </div>
       ) : (
         <div className="flex flex-col items-center gap-2">
           <UploadCloudIcon className="w-8 h-8 text-sky-400" />
-          <p className="text-slate-700 font-medium text-sm">
+          <p className="text-slate-700 dark:text-slate-200 font-medium text-sm">
             Drop a chest X-ray here, or click to choose a file
           </p>
-          <p className="text-slate-400 text-xs">PNG or JPG · DICOM support coming soon</p>
+          <p className="text-slate-400 dark:text-slate-500 text-xs">PNG or JPG · DICOM support coming soon</p>
         </div>
       )}
     </div>

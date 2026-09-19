@@ -4,15 +4,19 @@ import { DifferentialsPanel } from "./components/DifferentialsPanel";
 import { DisclaimerBanner } from "./components/DisclaimerBanner";
 import { FindingsTable } from "./components/FindingsTable";
 import { HistorySidebar } from "./components/HistorySidebar";
-import { AlertIcon, LungsIcon } from "./components/icons";
+import { AlertIcon, LogoMarkIcon } from "./components/icons";
 import { ImageViewer } from "./components/ImageViewer";
 import { QualityWarningBanner } from "./components/QualityWarningBanner";
 import { ReportPanel } from "./components/ReportPanel";
+import { SummaryCard } from "./components/SummaryCard";
 import { SystemFooter } from "./components/SystemFooter";
+import { ThemeToggle } from "./components/ThemeToggle";
 import { UploadPanel } from "./components/UploadPanel";
 import type { AnalysisResult, AnalysisSummary, HealthOut } from "./types";
+import { useTheme } from "./useTheme";
 
 function App() {
+  const [theme, toggleTheme] = useTheme();
   const [health, setHealth] = useState<HealthOut | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -73,74 +77,81 @@ function App() {
       />
 
       <header className="max-w-7xl mx-auto px-4 pt-6 pb-3 w-full flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center shrink-0">
-          <LungsIcon className="w-6 h-6" />
+        <div className="w-10 h-10 rounded-xl bg-slate-900 dark:bg-slate-950 ring-1 ring-white/10 flex items-center justify-center shrink-0">
+          <LogoMarkIcon className="w-6 h-6" />
         </div>
-        <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">MEDVISION</h1>
-          <p className="text-slate-500 text-xs sm:text-sm">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+            MEDVISION
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm truncate">
             Knowledge-graph anchored vision-reasoning framework for explainable clinical diagnosis
           </p>
         </div>
+        <ThemeToggle theme={theme} onToggle={toggleTheme} />
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 pb-10 w-full flex-1 grid grid-cols-1 lg:grid-cols-[260px_1fr_1fr] gap-4 items-start">
-        <aside className="space-y-4">
-          <UploadPanel onFileSelected={handleFile} loading={loading} />
-          <HistorySidebar
-            analyses={history}
-            activeId={result?.id ?? null}
-            onSelect={handleHistorySelect}
-          />
-        </aside>
+      <main className="max-w-7xl mx-auto px-4 pb-10 w-full flex-1 space-y-4">
+        {!error && result && <SummaryCard result={result} />}
 
-        {error && (
-          <div className="lg:col-span-2 mv-card mv-fade-in bg-rose-50/60 border-rose-200 text-rose-700 px-4 py-3.5 text-sm flex items-start gap-2.5">
-            <AlertIcon className="w-4 h-4 mt-0.5 shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
+        <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr_1fr] gap-4 items-start">
+          <aside className="space-y-4">
+            <UploadPanel onFileSelected={handleFile} loading={loading} />
+            <HistorySidebar
+              analyses={history}
+              activeId={result?.id ?? null}
+              onSelect={handleHistorySelect}
+            />
+          </aside>
 
-        {!error && !result && !loading && (
-          <div className="lg:col-span-2 flex flex-col items-center justify-center gap-3 text-center text-slate-400 text-sm border-2 border-dashed border-slate-200 rounded-2xl min-h-[280px] px-8">
-            <LungsIcon className="w-10 h-10 opacity-40" />
-            <p className="max-w-xs">
-              Upload a chest X-ray to see explainable findings, a differential diagnosis, and a
-              cited draft report.
-            </p>
-          </div>
-        )}
-
-        {!error && result && (
-          <>
-            <div className="space-y-4 mv-fade-in">
-              {result.quality_warnings.length > 0 && (
-                <QualityWarningBanner warnings={result.quality_warnings} />
-              )}
-              <ImageViewer
-                analysisId={result.id}
-                selectedNodeId={selectedNodeId}
-                selectedLabel={selectedFinding?.name ?? null}
-              />
-              <FindingsTable
-                analysisId={result.id}
-                findings={result.findings}
-                selectedNodeId={selectedNodeId}
-                onSelect={setSelectedNodeId}
-              />
+          {error && (
+            <div className="lg:col-span-2 mv-card mv-fade-in bg-rose-50/60 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/20 text-rose-700 dark:text-rose-300 px-4 py-3.5 text-sm flex items-start gap-2.5">
+              <AlertIcon className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>{error}</span>
             </div>
-            <div className="space-y-4 mv-fade-in">
-              <DifferentialsPanel differentials={result.differentials} />
-              <ReportPanel
-                report={result.report}
-                report_source={result.report_source}
-                grounding={result.grounding}
-                evidence={result.evidence}
-                timings_ms={result.timings_ms}
-              />
+          )}
+
+          {!error && !result && !loading && (
+            <div className="lg:col-span-2 flex flex-col items-center justify-center gap-3 text-center text-slate-400 text-sm border-2 border-dashed border-slate-200 dark:border-white/10 rounded-2xl min-h-[280px] px-8">
+              <LogoMarkIcon className="w-10 h-10 opacity-40" />
+              <p className="max-w-xs">
+                Upload a chest X-ray to see explainable findings, a differential diagnosis, and a
+                cited draft report.
+              </p>
             </div>
-          </>
-        )}
+          )}
+
+          {!error && result && (
+            <>
+              <div className="space-y-4 mv-fade-in">
+                {result.quality_warnings.length > 0 && (
+                  <QualityWarningBanner warnings={result.quality_warnings} />
+                )}
+                <ImageViewer
+                  analysisId={result.id}
+                  selectedNodeId={selectedNodeId}
+                  selectedLabel={selectedFinding?.name ?? null}
+                />
+                <FindingsTable
+                  analysisId={result.id}
+                  findings={result.findings}
+                  selectedNodeId={selectedNodeId}
+                  onSelect={setSelectedNodeId}
+                />
+              </div>
+              <div className="space-y-4 mv-fade-in">
+                <DifferentialsPanel differentials={result.differentials} />
+                <ReportPanel
+                  report={result.report}
+                  report_source={result.report_source}
+                  grounding={result.grounding}
+                  evidence={result.evidence}
+                  timings_ms={result.timings_ms}
+                />
+              </div>
+            </>
+          )}
+        </div>
       </main>
 
       <SystemFooter health={health} />

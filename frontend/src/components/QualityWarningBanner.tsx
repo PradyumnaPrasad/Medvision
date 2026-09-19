@@ -3,7 +3,7 @@ import { AlertIcon } from "./icons";
 export function QualityWarningBanner({ warnings }: { warnings: string[] }) {
   if (warnings.length === 0) return null;
   return (
-    <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800 mv-fade-in">
+    <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800 dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-300 mv-fade-in">
       <div className="font-medium mb-1 flex items-center gap-1.5">
         <AlertIcon className="w-4 h-4" />
         Image quality check flagged this upload
