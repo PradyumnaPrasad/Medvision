@@ -162,11 +162,13 @@ def analyze(
     image: Image.Image,
     save_dir: Path | None = None,
     result_id: str | None = None,
+    extra_warnings: list[str] | None = None,
 ) -> AnalysisResult:
     """Run the full pipeline on a single PIL image and return an explainable AnalysisResult.
 
     If save_dir is given, Grad-CAM overlays for each present/possible finding are written
     there as heatmap_<node_id>.png, and FindingOut.heatmap_path is set to that filename.
+    extra_warnings (e.g. from DICOM loading) are appended to the result's quality_warnings.
     Callers that need to know the id up front (e.g. to name save_dir after it) can pass
     result_id explicitly instead of letting analyze() generate one.
 
@@ -274,7 +276,7 @@ def analyze(
         grounding=narration.grounding,
         evidence=narration.evidence,
         report_text=report_text,
-        quality_warnings=quality.flags,  # empty when quality.is_valid with no soft flags
+        quality_warnings=[*quality.flags, *(extra_warnings or [])],
         timings_ms=timings,
         disclaimer=settings.disclaimer,
     )

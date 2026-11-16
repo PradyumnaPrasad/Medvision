@@ -17,6 +17,7 @@ from sqlmodel import Session, select
 from backend.app.db import AnalysisRecord, FeedbackRecord, get_session
 from backend.app.schemas import AnalysisSummary, FeedbackIn, FeedbackOut
 from medvision.config import get_settings
+from medvision.io import DicomError, load_dicom
 from medvision.pipeline import AnalysisResult, analyze
 from medvision.qc.ood import InvalidImageError
 
@@ -40,20 +41,25 @@ async def analyze_image(
             status_code=400,
             detail=f"Unsupported file type '{suffix}'. Allowed: {settings.api.allowed_extensions}",
         )
-    if suffix == ".dcm":
-        # DICOM de-identification + loading (medvision/io, PLAN.md T07) isn't wired up yet.
-        raise HTTPException(status_code=400, detail="DICOM upload support is not yet available.")
-
     raw = await file.read()
     max_bytes = settings.api.max_upload_mb * 1024 * 1024
     if len(raw) > max_bytes:
         raise HTTPException(status_code=413, detail=f"File exceeds {settings.api.max_upload_mb}MB")
 
-    try:
-        image = Image.open(io.BytesIO(raw))
-        image.load()
-    except UnidentifiedImageError as exc:
-        raise HTTPException(status_code=400, detail="Could not read image file") from exc
+    input_warnings: list[str] = []
+    if suffix == ".dcm":
+        try:
+            dicom = load_dicom(raw)
+        except DicomError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        image = dicom.image
+        input_warnings = dicom.warnings
+    else:
+        try:
+            image = Image.open(io.BytesIO(raw))
+            image.load()
+        except UnidentifiedImageError as exc:
+            raise HTTPException(status_code=400, detail="Could not read image file") from exc
 
     result_id = str(uuid.uuid4())
     save_dir = _uploads_dir_for(result_id)
@@ -61,7 +67,9 @@ async def analyze_image(
     image.convert("RGB").save(save_dir / "original.png")
 
     try:
-        result = analyze(image, save_dir=save_dir, result_id=result_id)
+        result = analyze(
+            image, save_dir=save_dir, result_id=result_id, extra_warnings=input_warnings
+        )
     except InvalidImageError as exc:
         shutil.rmtree(save_dir, ignore_errors=True)
         raise HTTPException(

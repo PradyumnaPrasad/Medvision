@@ -70,4 +70,17 @@ api:
   max_upload_mb: 20
   allowed_extensions: [".png", ".jpg", ".jpeg", ".dcm"]
 
+io:
+  dicom:
+    # Only plain radiograph modalities are accepted (CR = computed, DX = digital radiography);
+    # CT/MR/US etc. are rejected up front rather than run through a chest-X-ray classifier.
+    allowed_modalities: ["CR", "DX"]
+    # The classifier is trained on frontal views only.
+    rejected_view_positions: ["LL", "RL", "LAT", "LATERAL"]
+    # Intensity clip (percentiles) used when a DICOM carries no VOI window/LUT of its own.
+    fallback_percentiles: [0.5, 99.5]
+    # BodyPartExamined values containing any of these are treated as chest; anything else
+    # only produces a soft warning (the tag is often missing or wrong on real scanners).
+    chest_body_parts: ["CHEST", "THORAX", "LUNG", "RIB", "HEART"]
+
 disclaimer: "Research prototype for a college major project. Not a certified medical device. Not for clinical use."

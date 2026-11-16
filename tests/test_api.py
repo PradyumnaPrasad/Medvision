@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from PIL import Image
 
 from medvision.config import get_settings
+from tests.test_dicom import PHI, make_dicom
 
 FIXTURE = Path(__file__).parent / "fixtures" / "sample_cxr.png"
 
@@ -61,12 +62,80 @@ def test_analyze_rejects_unsupported_extension(client):
     assert response.status_code == 400
 
 
+def _cxr_dicom(**kwargs) -> bytes:
+    gray = np.asarray(Image.open(FIXTURE).convert("L"), dtype=np.uint16) * 16  # 12-bit range
+    if kwargs.get("photometric") == "MONOCHROME1":
+        gray = 4095 - gray
+    return make_dicom(gray, **kwargs)
+
+
+def _post_dicom(client, raw: bytes, name: str = "scan.dcm"):
+    return client.post("/api/v1/analyze", files={"file": (name, raw, "application/dicom")})
+
+
 @pytest.mark.slow
-def test_analyze_rejects_dicom_for_now(client):
-    response = client.post(
-        "/api/v1/analyze", files={"file": ("scan.dcm", b"fake", "application/dicom")}
-    )
+def test_analyze_rejects_garbage_dicom(client):
+    response = _post_dicom(client, b"fake")
     assert response.status_code == 400
+    assert "DICOM" in response.json()["detail"]
+
+
+@pytest.mark.slow
+def test_analyze_rejects_non_radiograph_dicom(client):
+    response = _post_dicom(client, _cxr_dicom(modality="CT"))
+    assert response.status_code == 400
+    assert "modality" in response.json()["detail"]
+
+
+@pytest.mark.slow
+def test_analyze_dicom_end_to_end_stores_no_phi(client):
+    response = _post_dicom(client, _cxr_dicom())
+    assert response.status_code == 200
+    data = response.json()
+    upload_dir = get_settings().paths.resolve("uploads_dir") / data["id"]
+    try:
+        assert data["findings"] and data["differentials"]
+
+        stored = [p for p in upload_dir.rglob("*") if p.is_file()]
+        assert stored and all(p.suffix == ".png" for p in stored)  # no DICOM persisted
+        blobs = [p.read_bytes() for p in stored]
+        blobs.append(response.content)
+        blobs.append(client.get(f"/api/v1/analyses/{data['id']}").content)
+        for value in PHI.values():
+            assert not any(value.encode() in blob for blob in blobs)
+    finally:
+        shutil.rmtree(upload_dir, ignore_errors=True)
+
+
+@pytest.mark.slow
+def test_analyze_monochrome1_dicom_matches_monochrome2(client):
+    responses = [
+        _post_dicom(client, _cxr_dicom(photometric="MONOCHROME2")),
+        _post_dicom(client, _cxr_dicom(photometric="MONOCHROME1")),
+    ]
+    try:
+        assert all(r.status_code == 200 for r in responses)
+        a, b = (r.json() for r in responses)
+        probs_a = {f["node_id"]: f["prob"] for f in a["findings"]}
+        probs_b = {f["node_id"]: f["prob"] for f in b["findings"]}
+        assert probs_a.keys() == probs_b.keys()
+        assert max(abs(probs_a[k] - probs_b[k]) for k in probs_a) < 0.02
+    finally:
+        for r in responses:
+            if r.status_code == 200:
+                shutil.rmtree(
+                    get_settings().paths.resolve("uploads_dir") / r.json()["id"],
+                    ignore_errors=True,
+                )
+
+
+@pytest.mark.slow
+def test_analyze_dicom_warnings_reach_the_response(client):
+    response = _post_dicom(client, _cxr_dicom(body_part="KNEE"))
+    assert response.status_code == 200
+    data = response.json()
+    shutil.rmtree(get_settings().paths.resolve("uploads_dir") / data["id"], ignore_errors=True)
+    assert any("KNEE" in w for w in data["quality_warnings"])
 
 
 @pytest.mark.slow
@@ -78,9 +147,7 @@ def test_analyze_rejects_a_color_photo_via_the_quality_gate(client):
     fake_photo.save(buf, format="PNG")
     buf.seek(0)
 
-    response = client.post(
-        "/api/v1/analyze", files={"file": ("photo.png", buf, "image/png")}
-    )
+    response = client.post("/api/v1/analyze", files={"file": ("photo.png", buf, "image/png")})
     assert response.status_code == 400
     assert "doesn't look like a usable chest X-ray" in response.json()["detail"]
 

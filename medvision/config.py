@@ -92,6 +92,17 @@ class ApiConfig(BaseModel):
     allowed_extensions: list[str] = [".png", ".jpg", ".jpeg", ".dcm"]
 
 
+class DicomConfig(BaseModel):
+    allowed_modalities: list[str] = ["CR", "DX"]
+    rejected_view_positions: list[str] = ["LL", "RL", "LAT", "LATERAL"]
+    fallback_percentiles: tuple[float, float] = (0.5, 99.5)
+    chest_body_parts: list[str] = ["CHEST", "THORAX", "LUNG", "RIB", "HEART"]
+
+
+class IoConfig(BaseModel):
+    dicom: DicomConfig = DicomConfig()
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="MEDVISION__", env_nested_delimiter="__")
 
@@ -104,6 +115,7 @@ class Settings(BaseSettings):
     retrieval: RetrievalConfig = RetrievalConfig()
     llm: LlmConfig = LlmConfig()
     api: ApiConfig = ApiConfig()
+    io: IoConfig = IoConfig()
     disclaimer: str = "Research prototype. Not for clinical use."
 
 

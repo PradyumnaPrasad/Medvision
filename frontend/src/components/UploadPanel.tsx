@@ -100,7 +100,7 @@ export function UploadPanel({ onFileSelected, loading }: Props) {
       <input
         ref={inputRef}
         type="file"
-        accept=".png,.jpg,.jpeg"
+        accept=".png,.jpg,.jpeg,.dcm"
         className="hidden"
         disabled={loading}
         onChange={(e) => handleFiles(e.target.files)}
@@ -118,7 +118,7 @@ export function UploadPanel({ onFileSelected, loading }: Props) {
           <p className="text-slate-700 dark:text-slate-200 font-medium text-sm">
             Drop a chest X-ray here, or click to choose a file
           </p>
-          <p className="text-slate-400 dark:text-slate-500 text-xs">PNG or JPG · DICOM support coming soon</p>
+          <p className="text-slate-400 dark:text-slate-500 text-xs">PNG, JPG or DICOM (.dcm) · patient info is stripped from DICOM files</p>
         </div>
       )}
     </div>
