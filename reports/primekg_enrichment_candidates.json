@@ -1,0 +1,26 @@
+[
+  {
+    "src": "F_EFFUSION",
+    "rel": "associated_with",
+    "dst": "D_SARCOIDOSIS",
+    "weight": 0.3,
+    "source": "primekg",
+    "note": "PrimeKG disease-phenotype association: 'sarcoidosis' <-> 'Pleural effusion' (HPO/MONDO, relation=disease_phenotype_positive)."
+  },
+  {
+    "src": "F_EMPHYSEMA",
+    "rel": "associated_with",
+    "dst": "D_SARCOIDOSIS",
+    "weight": 0.3,
+    "source": "primekg",
+    "note": "PrimeKG disease-phenotype association: 'sarcoidosis' <-> 'Emphysema' (HPO/MONDO, relation=disease_phenotype_positive)."
+  },
+  {
+    "src": "F_ATELECTASIS",
+    "rel": "associated_with",
+    "dst": "D_ASBESTOSIS",
+    "weight": 0.3,
+    "source": "primekg",
+    "note": "PrimeKG disease-phenotype association: 'asbestosis' <-> 'Atelectasis' (HPO/MONDO, relation=disease_phenotype_positive)."
+  }
+]

@@ -1,0 +1,47 @@
+[
+  {
+    "id": "A_PLEURA",
+    "file": "anatomy.yaml",
+    "current_name": "Pleura",
+    "current_definition": "The membrane surrounding the lungs, comprising visceral and parietal layers.",
+    "matched_mesh_label": "Pleura",
+    "mesh_id": "D010994",
+    "mesh_scope_note": "The thin serous membrane enveloping the lungs (LUNG) and lining the THORACIC CAVITY. Pleura consist of two layers, the inner visceral pleura lying next to the pulmonary parenchyma and the outer parietal pleura. Between the two layers is the PLEURAL CAVITY which contains a thin film of liquid."
+  },
+  {
+    "id": "A_MEDIASTINUM",
+    "file": "anatomy.yaml",
+    "current_name": "Mediastinum",
+    "current_definition": "The central thoracic compartment containing the heart, great vessels, trachea and esophagus.",
+    "matched_mesh_label": "Mediastinum",
+    "mesh_id": "D008482",
+    "mesh_scope_note": "A membrane in the midline of the THORAX of mammals. It separates the lungs between the STERNUM in front and the VERTEBRAL COLUMN behind. It also surrounds the HEART, TRACHEA, ESOPHAGUS, THYMUS, and LYMPH NODES."
+  },
+  {
+    "id": "A_DIAPHRAGM",
+    "file": "anatomy.yaml",
+    "current_name": "Diaphragm",
+    "current_definition": "The muscular structure separating thoracic and abdominal cavities.",
+    "matched_mesh_label": "Diaphragm",
+    "mesh_id": "D003964",
+    "mesh_scope_note": "The musculofibrous partition that separates the THORACIC CAVITY from the ABDOMINAL CAVITY. Contraction of the diaphragm increases the volume of the thoracic cavity aiding INHALATION."
+  },
+  {
+    "id": "A_RIBS",
+    "file": "anatomy.yaml",
+    "current_name": "Rib Cage",
+    "current_definition": "The bony thoracic cage, including ribs, sternum and thoracic spine.",
+    "matched_mesh_label": "Rib Cage",
+    "mesh_id": "D000070602",
+    "mesh_scope_note": "The bony thoracic enclosure consisting of the vertebral column; the RIBS; the STERNUM; and the COSTAL CARTILAGE."
+  },
+  {
+    "id": "A_TRACHEA",
+    "file": "anatomy.yaml",
+    "current_name": "Trachea",
+    "current_definition": "The central airway connecting the larynx to the bronchi, normally midline.",
+    "matched_mesh_label": "Trachea",
+    "mesh_id": "D014132",
+    "mesh_scope_note": "The cartilaginous and membranous tube descending from the larynx and branching into the right and left main bronchi."
+  }
+]

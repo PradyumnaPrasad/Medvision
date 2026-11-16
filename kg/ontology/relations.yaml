@@ -386,3 +386,30 @@ edges:
     dst: A_MEDIASTINUM
     weight: 1.0
     source: team
+
+  # --- associated_with: PrimeKG enrichment (T10) ---
+  # From PrimeKG's disease_phenotype_positive edges (Harvard Dataverse doi:10.7910/DVN/IXA7BM),
+  # filtered to exact-name matches against our disease/finding nodes only (see
+  # scripts/enrich_primekg.py and reports/primekg_enrichment_candidates.json). Weight 0.3
+  # is a flat "corroborating but not primary" weight, same convention as other weak
+  # suggestive_of edges - PrimeKG confirms an association exists but not its strength.
+  - src: F_EFFUSION
+    rel: associated_with
+    dst: D_SARCOIDOSIS
+    weight: 0.3
+    source: primekg
+    note: "PrimeKG disease-phenotype: sarcoidosis <-> Pleural effusion (HPO)."
+  - src: F_EMPHYSEMA
+    rel: associated_with
+    dst: D_SARCOIDOSIS
+    weight: 0.3
+    source: primekg
+    note: "PrimeKG disease-phenotype: sarcoidosis <-> Emphysema (HPO)."
+  - src: F_ATELECTASIS
+    rel: associated_with
+    dst: D_ASBESTOSIS
+    weight: 0.3
+    source: primekg
+    note: >
+      PrimeKG disease-phenotype: asbestosis <-> Atelectasis (HPO) - consistent with
+      rounded atelectasis, a well-known radiographic finding of asbestos exposure.

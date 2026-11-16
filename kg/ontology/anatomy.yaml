@@ -72,13 +72,15 @@ nodes:
     type: Anatomy
     name: Pleura
     definition: "The membrane surrounding the lungs, comprising visceral and parietal layers."
-    source: team
+    mesh_id: D010994
+    source: mesh
 
   - id: A_MEDIASTINUM
     type: Anatomy
     name: Mediastinum
     definition: "The central thoracic compartment containing the heart, great vessels, trachea and esophagus."
-    source: team
+    mesh_id: D008482
+    source: mesh
 
   - id: A_HEART
     type: Anatomy
@@ -90,16 +92,19 @@ nodes:
     type: Anatomy
     name: Diaphragm
     definition: "The muscular structure separating thoracic and abdominal cavities."
-    source: team
+    mesh_id: D003964
+    source: mesh
 
   - id: A_RIBS
     type: Anatomy
     name: Rib Cage
     definition: "The bony thoracic cage, including ribs, sternum and thoracic spine."
-    source: team
+    mesh_id: D000070602
+    source: mesh
 
   - id: A_TRACHEA
     type: Anatomy
     name: Trachea
     definition: "The central airway connecting the larynx to the bronchi, normally midline."
-    source: team
+    mesh_id: D014132
+    source: mesh

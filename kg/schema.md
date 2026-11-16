@@ -42,7 +42,7 @@ Source of truth: hand-authored YAML files in `kg/ontology/`. Generated artefacts
 | `complication_of` | Disease | Disease | one disease can progress into another |
 | `located_in` | Finding | Anatomy | typical/possible site (not exclusive) |
 | `part_of` | Anatomy | Anatomy | containment hierarchy |
-| `associated_with` | any | any | weaker/general association (reserved for PrimeKG enrichment, T10) |
+| `associated_with` | any | any | weaker/general association from external KG enrichment (PrimeKG, T10) — **not** consumed by `score_differentials()`; corroborating evidence only, not part of diagnosis scoring |
 
 ## Validation rules (enforced by `medvision/kg/validate.py`)
 
