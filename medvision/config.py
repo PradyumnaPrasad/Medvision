@@ -90,6 +90,8 @@ class ApiConfig(BaseModel):
     port: int = 8000
     max_upload_mb: int = 20
     allowed_extensions: list[str] = [".png", ".jpg", ".jpeg", ".dcm"]
+    pdf_max_heatmaps: int = 3
+    feedback_max_comment_chars: int = 2000
 
 
 class DicomConfig(BaseModel):

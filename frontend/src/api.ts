@@ -1,4 +1,10 @@
-import type { AnalysisResult, AnalysisSummary, HealthOut } from "./types";
+import type {
+  AnalysisResult,
+  AnalysisSummary,
+  FeedbackOut,
+  FeedbackVerdict,
+  HealthOut,
+} from "./types";
 
 const BASE = "/api/v1";
 
@@ -49,13 +55,22 @@ export function originalImageUrl(analysisId: string): string {
 export async function submitFeedback(
   analysisId: string,
   nodeId: string,
-  verdict: "agree" | "disagree",
+  verdict: FeedbackVerdict,
   comment?: string,
-): Promise<void> {
+): Promise<FeedbackOut> {
   const response = await fetch(`${BASE}/analyses/${analysisId}/feedback`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ node_id: nodeId, verdict, comment }),
   });
-  await handleResponse(response);
+  return handleResponse(response);
+}
+
+export async function getFeedback(analysisId: string): Promise<FeedbackOut[]> {
+  const response = await fetch(`${BASE}/analyses/${analysisId}/feedback`);
+  return handleResponse(response);
+}
+
+export function reportPdfUrl(analysisId: string): string {
+  return `${BASE}/analyses/${analysisId}/report.pdf`;
 }

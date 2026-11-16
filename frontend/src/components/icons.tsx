@@ -160,3 +160,11 @@ export function ClockIcon({ className = "w-3.5 h-3.5" }: IconProps) {
     </svg>
   );
 }
+
+export function DownloadIcon({ className = "w-4 h-4" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" width="1em" height="1em" className={className} stroke="currentColor" strokeWidth={1.8}>
+      <path d="M12 4v11m0 0-4-4m4 4 4-4M5 19h14" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}

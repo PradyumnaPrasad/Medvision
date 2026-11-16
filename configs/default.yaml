@@ -69,6 +69,8 @@ api:
   port: 8000
   max_upload_mb: 20
   allowed_extensions: [".png", ".jpg", ".jpeg", ".dcm"]
+  pdf_max_heatmaps: 3 # Grad-CAM overlays included in the PDF export (after the original image)
+  feedback_max_comment_chars: 2000
 
 io:
   dicom:

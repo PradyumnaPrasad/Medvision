@@ -33,6 +33,40 @@ def client():
 
 
 @pytest.fixture
+def stored_analysis(client):
+    """A hand-built analysis inserted straight into the DB: no pipeline run, so it's instant."""
+    import json
+    import uuid
+
+    from sqlmodel import Session, select
+
+    from backend.app.db import AnalysisRecord, FeedbackRecord, get_engine
+    from tests.test_report_pdf import make_result
+
+    result = make_result(id=str(uuid.uuid4()))
+    with Session(get_engine()) as session:
+        session.add(
+            AnalysisRecord(
+                id=result.id,
+                created_at=result.created_at,
+                result_json=result.model_dump_json(),
+                upload_dir="",
+            )
+        )
+        session.commit()
+    yield json.loads(result.model_dump_json())
+    with Session(get_engine()) as session:
+        for row in session.exec(
+            select(FeedbackRecord).where(FeedbackRecord.analysis_id == result.id)
+        ):
+            session.delete(row)
+        record = session.get(AnalysisRecord, result.id)
+        if record:
+            session.delete(record)
+        session.commit()
+
+
+@pytest.fixture
 def uploaded_analysis(client):
     """Upload the sample fixture once and clean up its files afterward."""
     with FIXTURE.open("rb") as f:
@@ -205,6 +239,95 @@ def test_feedback_roundtrip(client, uploaded_analysis):
     body = response.json()
     assert body["verdict"] == "agree"
     assert body["node_id"] == node_id
+
+
+@pytest.mark.slow
+def test_feedback_is_one_verdict_per_item_and_latest_wins(client, stored_analysis):
+    aid = stored_analysis["id"]
+    node = stored_analysis["findings"][0]["node_id"]
+    url = f"/api/v1/analyses/{aid}/feedback"
+    first = client.post(url, json={"node_id": node, "verdict": "agree"}).json()
+    second = client.post(url, json={"node_id": node, "verdict": "disagree", "comment": "no"}).json()
+    assert second["id"] == first["id"]  # updated in place, not a second row
+
+    listed = client.get(url).json()
+    assert len(listed) == 1
+    assert listed[0]["verdict"] == "disagree" and listed[0]["comment"] == "no"
+
+
+@pytest.mark.slow
+def test_feedback_accepts_differentials_and_lists_them_all(client, stored_analysis):
+    aid = stored_analysis["id"]
+    finding = stored_analysis["findings"][0]["node_id"]
+    diagnosis = stored_analysis["differentials"][0]["node_id"]
+    url = f"/api/v1/analyses/{aid}/feedback"
+    assert client.post(url, json={"node_id": finding, "verdict": "agree"}).status_code == 200
+    assert client.post(url, json={"node_id": diagnosis, "verdict": "agree"}).status_code == 200
+    assert {f["node_id"] for f in client.get(url).json()} == {finding, diagnosis}
+
+
+@pytest.mark.slow
+def test_feedback_rejects_unknown_nodes_bad_verdicts_and_long_comments(client, stored_analysis):
+    url = f"/api/v1/analyses/{stored_analysis['id']}/feedback"
+    node = stored_analysis["findings"][0]["node_id"]
+    assert client.post(url, json={"node_id": "F_NOT_REAL", "verdict": "agree"}).status_code == 400
+    assert client.post(url, json={"node_id": node, "verdict": "maybe"}).status_code == 422
+    too_long = "x" * (get_settings().api.feedback_max_comment_chars + 1)
+    body = {"node_id": node, "verdict": "agree", "comment": too_long}
+    assert client.post(url, json=body).status_code == 422
+    assert client.get(url).json() == []  # nothing was stored by the rejected requests
+
+
+@pytest.mark.slow
+def test_feedback_listing_collapses_legacy_duplicate_rows(client, stored_analysis):
+    from sqlmodel import Session
+
+    from backend.app.db import FeedbackRecord, get_engine
+
+    aid = stored_analysis["id"]
+    node = stored_analysis["findings"][0]["node_id"]
+    with Session(get_engine()) as session:
+        for verdict, ts in [("agree", 1.0), ("disagree", 2.0)]:
+            session.add(
+                FeedbackRecord(analysis_id=aid, node_id=node, verdict=verdict, created_at=ts)
+            )
+        session.commit()
+    listed = client.get(f"/api/v1/analyses/{aid}/feedback").json()
+    assert [f["verdict"] for f in listed] == ["disagree"]
+
+
+@pytest.mark.slow
+def test_feedback_listing_404s_for_unknown_analysis(client):
+    assert client.get("/api/v1/analyses/nope/feedback").status_code == 404
+
+
+@pytest.mark.slow
+def test_pdf_export_contains_the_analysis_and_reviewer_feedback(client, uploaded_analysis):
+    from pypdf import PdfReader
+
+    aid = uploaded_analysis["id"]
+    top = uploaded_analysis["findings"][0]
+    client.post(
+        f"/api/v1/analyses/{aid}/feedback",
+        json={"node_id": top["node_id"], "verdict": "disagree", "comment": "looks like artefact"},
+    )
+    response = client.get(f"/api/v1/analyses/{aid}/report.pdf")
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/pdf"
+    assert f"medvision-report-{aid[:8]}.pdf" in response.headers["content-disposition"]
+
+    reader = PdfReader(io.BytesIO(response.content))
+    text = "\n".join(page.extract_text() for page in reader.pages)
+    assert top["name"] in text
+    assert uploaded_analysis["differentials"][0]["name"] in text
+    assert "looks like artefact" in text and "Disagree" in text
+    assert "Not for clinical use" in text
+    assert len(reader.pages[0].images) >= 1  # original image (and heatmaps) embedded
+
+
+@pytest.mark.slow
+def test_pdf_export_404s_for_unknown_analysis(client):
+    assert client.get("/api/v1/analyses/nope/report.pdf").status_code == 404
 
 
 @pytest.mark.slow

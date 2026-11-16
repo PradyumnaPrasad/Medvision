@@ -1,5 +1,6 @@
 import { useState } from "react";
-import type { DifferentialOut } from "../types";
+import type { DifferentialOut, FeedbackVerdict } from "../types";
+import { FeedbackButtons } from "./FeedbackButtons";
 import { ChevronDownIcon, GraphIcon } from "./icons";
 
 function relationLabel(rel: string): string {
@@ -46,7 +47,13 @@ function EvidencePath({
   );
 }
 
-export function DifferentialsPanel({ differentials }: { differentials: DifferentialOut[] }) {
+interface PanelProps {
+  differentials: DifferentialOut[];
+  feedback: Record<string, FeedbackVerdict>;
+  onFeedback: (nodeId: string, verdict: FeedbackVerdict) => void;
+}
+
+export function DifferentialsPanel({ differentials, feedback, onFeedback }: PanelProps) {
   const [expanded, setExpanded] = useState<string | null>(differentials[0]?.node_id ?? null);
 
   if (differentials.length === 0) {
@@ -69,9 +76,10 @@ export function DifferentialsPanel({ differentials }: { differentials: Different
           const isOpen = expanded === d.node_id;
           return (
             <div key={d.node_id}>
+              <div className="flex items-center hover:bg-slate-50/70 dark:hover:bg-white/5 transition-colors">
               <button
                 onClick={() => setExpanded(isOpen ? null : d.node_id)}
-                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50/70 dark:hover:bg-white/5 transition-colors"
+                className="flex-1 min-w-0 flex items-center gap-3 pl-4 pr-2 py-3 text-left"
               >
                 <span
                   className={`text-xs w-5 h-5 rounded-full flex items-center justify-center font-semibold shrink-0 ${
@@ -98,6 +106,14 @@ export function DifferentialsPanel({ differentials }: { differentials: Different
                   className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
                 />
               </button>
+              <div className="shrink-0 pr-3">
+                <FeedbackButtons
+                  verdict={feedback[d.node_id]}
+                  onChange={(v) => onFeedback(d.node_id, v)}
+                  subject={d.name}
+                />
+              </div>
+              </div>
               {isOpen && (
                 <div className="px-4 pb-3.5 pl-8 space-y-2 mv-fade-in">
                   {d.paths.map((p, idx) => (

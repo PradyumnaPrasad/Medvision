@@ -10,11 +10,12 @@ import uuid
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from PIL import Image, UnidentifiedImageError
 from sqlmodel import Session, select
 
 from backend.app.db import AnalysisRecord, FeedbackRecord, get_session
+from backend.app.report_pdf import render_report_pdf
 from backend.app.schemas import AnalysisSummary, FeedbackIn, FeedbackOut
 from medvision.config import get_settings
 from medvision.io import DicomError, load_dicom
@@ -133,22 +134,8 @@ def get_original(analysis_id: str) -> FileResponse:
     return FileResponse(path, media_type="image/png")
 
 
-@router.post("/analyses/{analysis_id}/feedback", response_model=FeedbackOut)
-def submit_feedback(
-    analysis_id: str, feedback: FeedbackIn, session: Session = Depends(get_session)
-) -> FeedbackOut:
-    if session.get(AnalysisRecord, analysis_id) is None:
-        raise HTTPException(status_code=404, detail="Analysis not found")
-    record = FeedbackRecord(
-        analysis_id=analysis_id,
-        node_id=feedback.node_id,
-        verdict=feedback.verdict,
-        comment=feedback.comment,
-        created_at=time.time(),
-    )
-    session.add(record)
-    session.commit()
-    session.refresh(record)
+def _feedback_out(record: FeedbackRecord) -> FeedbackOut:
+    assert record.id is not None
     return FeedbackOut(
         id=record.id,
         analysis_id=record.analysis_id,
@@ -156,4 +143,90 @@ def submit_feedback(
         verdict=record.verdict,
         comment=record.comment,
         created_at=record.created_at,
+    )
+
+
+def _latest_feedback(session: Session, analysis_id: str) -> list[FeedbackRecord]:
+    """One record per node (the most recent), oldest first. Tolerates legacy duplicates."""
+    records = session.exec(
+        select(FeedbackRecord)
+        .where(FeedbackRecord.analysis_id == analysis_id)
+        .order_by(FeedbackRecord.created_at, FeedbackRecord.id)
+    ).all()
+    latest: dict[str, FeedbackRecord] = {r.node_id: r for r in records}
+    return sorted(latest.values(), key=lambda r: (r.created_at, r.id or 0))
+
+
+@router.post("/analyses/{analysis_id}/feedback", response_model=FeedbackOut)
+def submit_feedback(
+    analysis_id: str, feedback: FeedbackIn, session: Session = Depends(get_session)
+) -> FeedbackOut:
+    """Record a reviewer verdict on one finding or differential (one verdict per item).
+
+    Submitting again for the same item replaces the earlier verdict rather than adding
+    a second row, so the stored feedback always reflects the reviewer's latest opinion.
+    """
+    analysis = session.get(AnalysisRecord, analysis_id)
+    if analysis is None:
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    max_chars = get_settings().api.feedback_max_comment_chars
+    if feedback.comment is not None and len(feedback.comment) > max_chars:
+        raise HTTPException(status_code=422, detail=f"Comment exceeds {max_chars} characters")
+
+    result = AnalysisResult.model_validate_json(analysis.result_json)
+    valid_nodes = {f.node_id for f in result.findings} | {d.node_id for d in result.differentials}
+    if feedback.node_id not in valid_nodes:
+        raise HTTPException(
+            status_code=400, detail=f"'{feedback.node_id}' is not a finding or diagnosis here"
+        )
+
+    existing = session.exec(
+        select(FeedbackRecord)
+        .where(FeedbackRecord.analysis_id == analysis_id)
+        .where(FeedbackRecord.node_id == feedback.node_id)
+        .order_by(FeedbackRecord.created_at, FeedbackRecord.id)
+    ).all()
+    record = (
+        existing[-1]
+        if existing
+        else FeedbackRecord(
+            analysis_id=analysis_id,
+            node_id=feedback.node_id,
+            verdict=feedback.verdict,
+            created_at=0,
+        )
+    )
+    for stale in existing[:-1]:
+        session.delete(stale)
+    record.verdict = feedback.verdict
+    record.comment = feedback.comment
+    record.created_at = time.time()
+    session.add(record)
+    session.commit()
+    session.refresh(record)
+    return _feedback_out(record)
+
+
+@router.get("/analyses/{analysis_id}/feedback", response_model=list[FeedbackOut])
+def list_feedback(analysis_id: str, session: Session = Depends(get_session)) -> list[FeedbackOut]:
+    if session.get(AnalysisRecord, analysis_id) is None:
+        raise HTTPException(status_code=404, detail="Analysis not found")
+    return [_feedback_out(r) for r in _latest_feedback(session, analysis_id)]
+
+
+@router.get("/analyses/{analysis_id}/report.pdf")
+def get_report_pdf(analysis_id: str, session: Session = Depends(get_session)) -> Response:
+    record = session.get(AnalysisRecord, analysis_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Analysis not found")
+    result = AnalysisResult.model_validate_json(record.result_json)
+    feedback = [_feedback_out(r) for r in _latest_feedback(session, analysis_id)]
+    pdf = render_report_pdf(result, feedback, Path(record.upload_dir))
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="medvision-report-{analysis_id[:8]}.pdf"'
+        },
     )

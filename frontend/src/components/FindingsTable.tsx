@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { submitFeedback } from "../api";
-import type { FindingOut } from "../types";
-import { ChevronDownIcon, CheckCircleIcon, ThumbsDownIcon, ThumbsUpIcon } from "./icons";
+import type { FeedbackVerdict, FindingOut } from "../types";
+import { FeedbackButtons } from "./FeedbackButtons";
+import { ChevronDownIcon } from "./icons";
 
 interface Props {
-  analysisId: string;
   findings: FindingOut[];
+  feedback: Record<string, FeedbackVerdict>;
+  onFeedback: (nodeId: string, verdict: FeedbackVerdict) => void;
   selectedNodeId: string | null;
   onSelect: (nodeId: string) => void;
 }
@@ -29,18 +30,8 @@ function formatRegion(region: string | null): string {
     .join(" ");
 }
 
-export function FindingsTable({ analysisId, findings, selectedNodeId, onSelect }: Props) {
-  const [feedbackGiven, setFeedbackGiven] = useState<Record<string, "agree" | "disagree">>({});
+export function FindingsTable({ findings, feedback, onFeedback, selectedNodeId, onSelect }: Props) {
   const [showAll, setShowAll] = useState(false);
-
-  const giveFeedback = async (nodeId: string, verdict: "agree" | "disagree") => {
-    setFeedbackGiven((prev) => ({ ...prev, [nodeId]: verdict }));
-    try {
-      await submitFeedback(analysisId, nodeId, verdict);
-    } catch {
-      // best-effort: feedback is a nice-to-have, don't block the UI on a failed POST
-    }
-  };
 
   const shown = findings.filter((f) => f.status !== "absent");
   const hidden = findings.filter((f) => f.status === "absent");
@@ -122,32 +113,11 @@ export function FindingsTable({ analysisId, findings, selectedNodeId, onSelect }
                 </td>
                 <td className="px-4 py-2.5 text-slate-500 text-xs">{formatRegion(f.region)}</td>
                 <td className="px-4 py-2.5" onClick={(e) => e.stopPropagation()}>
-                  {clickable ? (
-                    feedbackGiven[f.node_id] ? (
-                      <span className="text-emerald-500 text-xs flex items-center gap-1">
-                        <CheckCircleIcon className="w-3.5 h-3.5" /> saved
-                      </span>
-                    ) : (
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => giveFeedback(f.node_id, "agree")}
-                          className="text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-400 rounded-md p-1.5 transition-colors"
-                          title="Agree with this finding"
-                        >
-                          <ThumbsUpIcon />
-                        </button>
-                        <button
-                          onClick={() => giveFeedback(f.node_id, "disagree")}
-                          className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 dark:hover:text-rose-400 rounded-md p-1.5 transition-colors"
-                          title="Disagree with this finding"
-                        >
-                          <ThumbsDownIcon />
-                        </button>
-                      </div>
-                    )
-                  ) : (
-                    <span className="text-slate-300 text-xs">—</span>
-                  )}
+                  <FeedbackButtons
+                    verdict={feedback[f.node_id]}
+                    onChange={(v) => onFeedback(f.node_id, v)}
+                    subject={f.name}
+                  />
                 </td>
               </tr>
             );

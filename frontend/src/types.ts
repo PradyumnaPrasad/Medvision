@@ -115,3 +115,14 @@ export interface HealthOut {
   kg_edges: number;
   disclaimer: string;
 }
+
+export type FeedbackVerdict = "agree" | "disagree";
+
+export interface FeedbackOut {
+  id: number;
+  analysis_id: string;
+  node_id: string;
+  verdict: FeedbackVerdict;
+  comment: string | null;
+  created_at: number;
+}

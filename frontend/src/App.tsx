@@ -1,5 +1,12 @@
-import { useEffect, useState } from "react";
-import { analyzeImage, getAnalysis, getHealth, listAnalyses } from "./api";
+import { useEffect, useRef, useState } from "react";
+import {
+  analyzeImage,
+  getAnalysis,
+  getFeedback,
+  getHealth,
+  listAnalyses,
+  submitFeedback,
+} from "./api";
 import { DifferentialsPanel } from "./components/DifferentialsPanel";
 import { DisclaimerBanner } from "./components/DisclaimerBanner";
 import { FindingsTable } from "./components/FindingsTable";
@@ -12,7 +19,7 @@ import { SummaryCard } from "./components/SummaryCard";
 import { SystemFooter } from "./components/SystemFooter";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { UploadPanel } from "./components/UploadPanel";
-import type { AnalysisResult, AnalysisSummary, HealthOut } from "./types";
+import type { AnalysisResult, AnalysisSummary, FeedbackVerdict, HealthOut } from "./types";
 import { useTheme } from "./useTheme";
 
 function App() {
@@ -23,6 +30,9 @@ function App() {
   const [history, setHistory] = useState<AnalysisSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<Record<string, FeedbackVerdict>>({});
+  const [feedbackError, setFeedbackError] = useState<string | null>(null);
+  const currentId = useRef<string | null>(null);
 
   const refreshHistory = () => {
     listAnalyses().then(setHistory).catch(() => {});
@@ -50,9 +60,39 @@ function App() {
   };
 
   const applyResult = (analysis: AnalysisResult) => {
+    currentId.current = analysis.id;
     setResult(analysis);
+    setFeedback({});
+    setFeedbackError(null);
     const topShown = analysis.findings.find((f) => f.status !== "absent");
     setSelectedNodeId(topShown?.node_id ?? null);
+    getFeedback(analysis.id)
+      .then((items) => {
+        if (currentId.current !== analysis.id) return; // user already moved on
+        setFeedback(Object.fromEntries(items.map((f) => [f.node_id, f.verdict])));
+      })
+      .catch(() => {});
+  };
+
+  const handleFeedback = async (nodeId: string, verdict: FeedbackVerdict) => {
+    if (!result) return;
+    const analysisId = result.id;
+    const previous = feedback[nodeId];
+    if (previous === verdict) return;
+    setFeedbackError(null);
+    setFeedback((prev) => ({ ...prev, [nodeId]: verdict }));
+    try {
+      await submitFeedback(analysisId, nodeId, verdict);
+    } catch (e) {
+      if (currentId.current !== analysisId) return;
+      setFeedback((prev) => {
+        const next = { ...prev };
+        if (previous) next[nodeId] = previous;
+        else delete next[nodeId];
+        return next;
+      });
+      setFeedbackError(e instanceof Error ? `Feedback not saved: ${e.message}` : "Feedback not saved");
+    }
   };
 
   const handleHistorySelect = async (id: string) => {
@@ -92,7 +132,20 @@ function App() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 pb-10 w-full flex-1 space-y-4">
-        {!error && result && <SummaryCard result={result} />}
+        {!error && result && (
+          <>
+            <SummaryCard result={result} />
+            {feedbackError && (
+              <div
+                role="alert"
+                className="mv-card bg-rose-50/60 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/20 text-rose-700 dark:text-rose-300 px-4 py-2.5 text-sm flex items-center gap-2"
+              >
+                <AlertIcon className="w-4 h-4 shrink-0" />
+                <span>{feedbackError}</span>
+              </div>
+            )}
+          </>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr_1fr] gap-4 items-start">
           <aside className="space-y-4">
@@ -133,14 +186,19 @@ function App() {
                   selectedLabel={selectedFinding?.name ?? null}
                 />
                 <FindingsTable
-                  analysisId={result.id}
                   findings={result.findings}
+                  feedback={feedback}
+                  onFeedback={handleFeedback}
                   selectedNodeId={selectedNodeId}
                   onSelect={setSelectedNodeId}
                 />
               </div>
               <div className="space-y-4 mv-fade-in">
-                <DifferentialsPanel differentials={result.differentials} />
+                <DifferentialsPanel
+                  differentials={result.differentials}
+                  feedback={feedback}
+                  onFeedback={handleFeedback}
+                />
                 <ReportPanel
                   report={result.report}
                   report_source={result.report_source}

@@ -1,5 +1,6 @@
+import { reportPdfUrl } from "../api";
 import type { AnalysisResult } from "../types";
-import { CheckCircleIcon, SparkleIcon } from "./icons";
+import { CheckCircleIcon, DownloadIcon, SparkleIcon } from "./icons";
 
 function groundingColor(score: number): string {
   if (score >= 0.9) return "text-emerald-500 dark:text-emerald-400";
@@ -16,9 +17,9 @@ export function SummaryCard({ result }: { result: AnalysisResult }) {
 
   return (
     <div className="mv-card mv-fade-in p-4 sm:p-5">
-      <div className="flex items-start gap-2 mb-3">
+      <div className="flex flex-wrap items-start gap-x-2 gap-y-2 mb-3">
         <SparkleIcon className="w-4 h-4 text-indigo-400 mt-0.5 shrink-0" />
-        <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
+        <p className="flex-1 min-w-[14rem] text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
           {top ? (
             <>
               Findings are most consistent with{" "}
@@ -31,6 +32,15 @@ export function SummaryCard({ result }: { result: AnalysisResult }) {
             "No differential diagnosis reached the activation threshold for this image."
           )}
         </p>
+        <a
+          href={reportPdfUrl(result.id)}
+          download
+          title="Download this analysis as a PDF report"
+          className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-indigo-700 bg-indigo-50 ring-1 ring-indigo-100 hover:bg-indigo-100 dark:text-indigo-300 dark:bg-indigo-500/10 dark:ring-indigo-500/20 dark:hover:bg-indigo-500/20 transition-colors"
+        >
+          <DownloadIcon className="w-3.5 h-3.5" />
+          PDF report
+        </a>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-slate-100 dark:border-white/10">
