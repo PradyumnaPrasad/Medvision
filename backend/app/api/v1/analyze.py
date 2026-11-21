@@ -5,6 +5,7 @@ from __future__ import annotations
 import io
 import json
 import shutil
+import threading
 import time
 import uuid
 from pathlib import Path
@@ -13,6 +14,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from fastapi.responses import FileResponse, Response
 from PIL import Image, UnidentifiedImageError
 from sqlmodel import Session, select
+from starlette.concurrency import run_in_threadpool
 
 from backend.app.db import AnalysisRecord, FeedbackRecord, get_session
 from backend.app.report_pdf import render_report_pdf
@@ -23,6 +25,17 @@ from medvision.pipeline import AnalysisResult, analyze
 from medvision.qc.ood import InvalidImageError
 
 router = APIRouter(tags=["analyze"])
+
+# The pipeline shares one model instance whose forward hooks (feature capture, Grad-CAM) are
+# not safe to run concurrently, so analyses run one at a time, off the event loop.
+_ANALYSIS_LOCK = threading.Lock()
+
+
+def _run_analysis(
+    image: Image.Image, save_dir: Path, result_id: str, extra_warnings: list[str]
+) -> AnalysisResult:
+    with _ANALYSIS_LOCK:
+        return analyze(image, save_dir=save_dir, result_id=result_id, extra_warnings=extra_warnings)
 
 
 def _uploads_dir_for(result_id: str) -> Path:
@@ -68,9 +81,7 @@ async def analyze_image(
     image.convert("RGB").save(save_dir / "original.png")
 
     try:
-        result = analyze(
-            image, save_dir=save_dir, result_id=result_id, extra_warnings=input_warnings
-        )
+        result = await run_in_threadpool(_run_analysis, image, save_dir, result_id, input_warnings)
     except InvalidImageError as exc:
         shutil.rmtree(save_dir, ignore_errors=True)
         raise HTTPException(

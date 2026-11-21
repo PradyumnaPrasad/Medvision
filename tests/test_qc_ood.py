@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import numpy as np
+import pytest
 from PIL import Image
 
 from medvision.qc.ood import InvalidImageError, check_image_quality
@@ -88,3 +89,41 @@ def test_plausible_grayscale_radiograph_shape_passes_cleanly():
 
     assert result.is_valid
     assert result.flags == []
+
+
+def _tinted(gains):
+    base = np.array(Image.open(FIXTURE).convert("L")).astype(np.float64)
+    rgb = np.clip(np.stack([base * g for g in gains], axis=-1), 0, 255).astype(np.uint8)
+    return Image.fromarray(rgb)
+
+
+@pytest.mark.parametrize(
+    "gains", [(0.97, 1.0, 1.05), (0.92, 1.0, 1.10), (1.1, 1.0, 0.8), (0.6, 1.0, 1.4)]
+)
+def test_tinted_radiograph_is_accepted_with_a_warning(gains):
+    result = check_image_quality(_tinted(gains))
+    assert result.is_valid
+    assert result.color_variance < 8.0
+    assert any("colour tint" in f for f in result.flags)
+
+
+def test_untinted_radiograph_gets_no_tint_warning():
+    result = check_image_quality(Image.open(FIXTURE))
+    assert result.is_valid and not any("tint" in f for f in result.flags)
+
+
+@pytest.mark.parametrize("name", ["astronaut", "chelsea", "coffee", "immunohistochemistry"])
+def test_real_color_photographs_are_still_rejected(name):
+    from skimage import data
+
+    result = check_image_quality(Image.fromarray(getattr(data, name)()))
+    assert not result.is_valid
+    assert any("color photo" in f for f in result.flags)
+
+
+def test_desaturated_photograph_is_still_rejected():
+    from PIL import ImageEnhance
+    from skimage import data
+
+    washed_out = ImageEnhance.Color(Image.fromarray(data.astronaut())).enhance(0.2)
+    assert not check_image_quality(washed_out).is_valid

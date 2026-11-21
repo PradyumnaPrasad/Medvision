@@ -11,7 +11,8 @@ as 3-channel RGB, the R/G/B values are ~identical at every pixel. A real color
 photo's channels differ substantially. Measured on real data (see
 reports/ood_gate_calibration.md): our chest X-ray fixtures scored ~0.0 on this
 metric; a real color photograph scored ~110. That gap is what max_color_variance
-polices.
+polices. The metric is measured after removing any uniform colour cast, so a tinted
+screenshot of a real X-ray is accepted (with a warning) instead of rejected.
 
 Known limitation: this catches color photos, not other grayscale non-CXR images
 (e.g. a different body part, a hand X-ray). A proper fix needs an embedding-based
@@ -55,6 +56,18 @@ def _color_variance(rgb: np.ndarray) -> float:
     return float(np.mean(np.abs(r - g)) + np.mean(np.abs(g - b)) + np.mean(np.abs(r - b)))
 
 
+def _remove_uniform_tint(rgb: np.ndarray) -> np.ndarray:
+    """Rescale each channel so all three have the same mean.
+
+    A radiograph that was screenshotted or saved with a colour cast is still a grayscale
+    image multiplied by a constant per-channel gain, so this removes its cast entirely
+    (measured: even an extreme blue cast drops to ~3.6). A real photograph has colours that
+    vary across the picture, so it stays far above the limit (measured: 22 to 217).
+    """
+    means = rgb.reshape(-1, 3).mean(axis=0)
+    return rgb * (means.mean() / np.maximum(means, 1e-6))
+
+
 def check_image_quality(image: Image.Image) -> QualityCheckResult:
     """Cheap heuristic checks run before the classifier ever sees the image."""
     qc = get_settings().qc
@@ -63,7 +76,8 @@ def check_image_quality(image: Image.Image) -> QualityCheckResult:
     gray = np.array(image.convert("L")).astype(np.float64)
     width, height = image.size
 
-    color_variance = _color_variance(rgb)
+    raw_color_variance = _color_variance(rgb)
+    color_variance = _color_variance(_remove_uniform_tint(rgb))
     contrast_std = float(gray.std())
     aspect_ratio = width / height if height > 0 else 0.0
 
@@ -77,13 +91,19 @@ def check_image_quality(image: Image.Image) -> QualityCheckResult:
     if color_variance > qc.max_color_variance:
         hard_reasons.append(
             f"image does not look like a grayscale radiograph (color_variance="
-            f"{color_variance:.1f}, expected <= {qc.max_color_variance}) — this looks like "
-            "a color photo, not a chest X-ray"
+            f"{color_variance:.1f} after removing any uniform tint, expected <= "
+            f"{qc.max_color_variance}) — this looks like a color photo, not a chest X-ray"
         )
     if contrast_std < qc.min_contrast_std:
         hard_reasons.append(
             f"image has almost no contrast (std={contrast_std:.1f}) — likely a blank or "
             "corrupted upload"
+        )
+
+    if color_variance <= qc.max_color_variance < raw_color_variance:
+        soft_flags.append(
+            f"image has a colour tint (color_variance={raw_color_variance:.1f}); it was "
+            "analysed as grayscale, but check that it is an unaltered radiograph"
         )
 
     if not (qc.aspect_ratio_min <= aspect_ratio <= qc.aspect_ratio_max):
