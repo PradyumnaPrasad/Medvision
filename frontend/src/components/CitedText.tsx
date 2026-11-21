@@ -17,6 +17,8 @@ function resolveEvidenceLabel(id: string, evidence: EvidenceBlock): string {
   }
   const fact = evidence.kg_facts.find((k) => k.id === id);
   if (fact) return `${id}: ${fact.text}`;
+  const reference = evidence.cases?.find((c) => c.id === id);
+  if (reference) return `${id}: ${reference.text}`;
   return `${id}: unknown evidence`;
 }
 

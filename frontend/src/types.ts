@@ -53,10 +53,38 @@ export interface EvidenceKgFact {
   text: string;
 }
 
+export interface EvidenceCase {
+  id: string; // "C1", "C2", ...
+  case_id: string;
+  similarity: number;
+  labels: string[];
+  text: string;
+}
+
 export interface EvidenceBlock {
   findings: EvidenceFinding[];
   differentials: EvidenceDifferential[];
   kg_facts: EvidenceKgFact[];
+  cases?: EvidenceCase[]; // absent on analyses stored before retrieval existed
+}
+
+export interface NodeHintOut {
+  node_id: string;
+  name: string;
+  score: number;
+}
+
+export interface SimilarCaseOut {
+  case_id: string;
+  similarity: number;
+  labels: string[];
+  finding_node_ids: string[];
+  split: string;
+}
+
+export interface RetrievalOut {
+  node_hints: NodeHintOut[];
+  similar_cases: SimilarCaseOut[];
 }
 
 export interface ReportItem {
@@ -97,6 +125,7 @@ export interface AnalysisResult {
   evidence: EvidenceBlock;
   report_text: string;
   quality_warnings: string[]; // soft QC flags, e.g. an unusual aspect ratio; [] if none
+  retrieval?: RetrievalOut | null; // null/absent when the alignment index isn't built
   timings_ms: Record<string, number>;
   disclaimer: string;
 }
@@ -113,6 +142,7 @@ export interface HealthOut {
   device: string;
   kg_nodes: number;
   kg_edges: number;
+  retrieval_ready?: boolean;
   disclaimer: string;
 }
 

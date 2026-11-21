@@ -16,5 +16,6 @@ def health() -> HealthOut:
         device=get_device(),
         kg_nodes=len(models.graph),
         kg_edges=len(models.graph.edges),
+        retrieval_ready=models.retrieval is not None,
         disclaimer=settings.disclaimer,
     )

@@ -34,15 +34,25 @@ class EvidenceKgFact(BaseModel):
     text: str  # human-readable edge, e.g. "Consolidation suggestive_of Pneumonia (w=0.85)"
 
 
+class EvidenceCase(BaseModel):
+    id: str  # "C1", "C2", ...
+    case_id: str
+    similarity: float
+    labels: list[str]
+    text: str  # e.g. "Similar reference case (similarity 0.83) was labelled: Effusion"
+
+
 class EvidenceBlock(BaseModel):
     findings: list[EvidenceFinding]
     differentials: list[EvidenceDifferential]
     kg_facts: list[EvidenceKgFact]
+    cases: list[EvidenceCase] = Field(default_factory=list)
 
     def all_ids(self) -> set[str]:
         ids = {f.id for f in self.findings}
         ids |= {d.id for d in self.differentials}
         ids |= {k.id for k in self.kg_facts}
+        ids |= {c.id for c in self.cases}
         return ids
 
 

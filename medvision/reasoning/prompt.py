@@ -13,6 +13,7 @@ from medvision.kg.graph import KnowledgeGraph
 from medvision.kg.reasoning import DiagnosisScore
 from medvision.reasoning.schema import (
     EvidenceBlock,
+    EvidenceCase,
     EvidenceDifferential,
     EvidenceFinding,
     EvidenceKgFact,
@@ -26,6 +27,19 @@ class FindingLike(Protocol):
     status: str
     region: str | None
 
+
+class CaseLike(Protocol):
+    case_id: str
+    similarity: float
+    labels: list[str]
+
+
+CASE_RULE = """6. Items with ids starting with "C" are similar labelled reference cases retrieved \
+from an image-similarity index. They are supporting context only: you may mention in the \
+impression that similar reference cases carried the same label, citing the C id, but you \
+must never use a case to introduce a finding or diagnosis that the F and D items do not \
+already support.
+"""
 
 SYSTEM_INSTRUCTIONS = """You are a radiology report drafting assistant. You are NOT a doctor \
 and this draft will always be reviewed by a qualified clinician before it is used.
@@ -48,6 +62,7 @@ def build_evidence_block(
     findings: list[FindingLike],
     differentials: list[DiagnosisScore],
     graph: KnowledgeGraph,
+    cases: list[CaseLike] | None = None,
 ) -> EvidenceBlock:
     """Assemble the id-tagged evidence the LLM (and later the verifier) will work from."""
     shown = [f for f in findings if f.status != "absent"]
@@ -92,8 +107,25 @@ def build_evidence_block(
             )
         )
 
+    evidence_cases = [
+        EvidenceCase(
+            id=f"C{i + 1}",
+            case_id=c.case_id,
+            similarity=c.similarity,
+            labels=list(c.labels),
+            text=(
+                f"Similar reference case (similarity {c.similarity:.2f}) was labelled: "
+                f"{', '.join(c.labels) or 'no label'}"
+            ),
+        )
+        for i, c in enumerate(cases or [])
+    ]
+
     return EvidenceBlock(
-        findings=evidence_findings, differentials=evidence_differentials, kg_facts=kg_facts
+        findings=evidence_findings,
+        differentials=evidence_differentials,
+        kg_facts=kg_facts,
+        cases=evidence_cases,
     )
 
 
@@ -121,4 +153,5 @@ def build_user_prompt(evidence: EvidenceBlock, feedback: str | None = None) -> s
 
 
 def build_prompt(evidence: EvidenceBlock, feedback: str | None = None) -> str:
-    return f"{SYSTEM_INSTRUCTIONS}\n\n{build_user_prompt(evidence, feedback)}"
+    system = SYSTEM_INSTRUCTIONS + (CASE_RULE if evidence.cases else "")
+    return f"{system}\n\n{build_user_prompt(evidence, feedback)}"

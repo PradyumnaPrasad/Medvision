@@ -48,10 +48,35 @@ kg:
     contradiction_penalty_weight: 1.0
     activation_threshold: 0.3  # a finding node "activates" the graph if calibrated prob >= this
 
+align:
+  # Image <-> knowledge-graph alignment (PLAN.md T16-T20). Trained on cached frozen DenseNet
+  # features, so training is seconds on a laptop CPU.
+  feature_dim: 1024
+  embed_dim: 128
+  hidden_dim: 256
+  gnn_layers: 2
+  gnn_heads: 4
+  dropout: 0.2
+  init_temperature: 0.07 # learnable; this is only the starting value
+  node_loss_weight: 0.5 # weight of the image->KG-node contrastive term next to image<->graph-set
+  lr: 0.001
+  weight_decay: 0.0001
+  epochs: 80
+  patience: 12 # early stopping on validation loss
+  batch_size: 256
+  seed: 0
+  features_file: "nih_features.npz" # under paths.processed_dir
+  checkpoint_file: "alignment.pt" # under paths.models_dir
+  nih_dir: "data/raw/nih"
+  chroma_collection_nodes: "kg_nodes"
+  chroma_collection_cases: "cases"
+  min_positives_for_auroc: 20 # skip per-finding AUROC when a test split has fewer positives
+
 retrieval:
   top_k_nodes: 5
   top_k_snippets: 5
   top_k_cases: 5
+  cases_in_prompt: 3 # how many of the retrieved cases are shown to the LLM as C-evidence
 
 llm:
   provider: "ollama"

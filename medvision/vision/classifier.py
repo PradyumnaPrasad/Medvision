@@ -73,10 +73,23 @@ class ChestXrayClassifier:
         return tensor.to(self.device)
 
     @torch.no_grad()
-    def predict(self, image: Image.Image) -> list[ClassifierPrediction]:
-        """Run inference and return one ClassifierPrediction per known (mapped) pathology."""
-        tensor = self.preprocess(image)
-        outputs = self.model(tensor)[0].detach().cpu().numpy()
+    def _forward(self, batch: torch.Tensor) -> tuple[np.ndarray, np.ndarray]:
+        """One forward pass -> (raw outputs (B, n_pathologies), pooled features (B, 1024)).
+
+        The pooled features are the exact input of the model's linear head, captured with a
+        pre-hook, so the embedding is by construction what the classifier itself "saw".
+        """
+        captured: list[torch.Tensor] = []
+        handle = self.model.classifier.register_forward_pre_hook(
+            lambda _module, args: captured.append(args[0].detach())
+        )
+        try:
+            outputs = self.model(batch).detach().cpu().numpy()
+        finally:
+            handle.remove()
+        return outputs, captured[0].cpu().numpy()
+
+    def _to_predictions(self, outputs: np.ndarray) -> list[ClassifierPrediction]:
         predictions: list[ClassifierPrediction] = []
         for label, prob in zip(self.model.pathologies, outputs, strict=True):
             node_id = self.labels_map.get(label)
@@ -86,3 +99,20 @@ class ChestXrayClassifier:
                 continue  # this checkpoint doesn't supervise this label
             predictions.append(ClassifierPrediction(node_id=node_id, label=label, prob=float(prob)))
         return predictions
+
+    def predict(self, image: Image.Image) -> list[ClassifierPrediction]:
+        """Run inference and return one ClassifierPrediction per known (mapped) pathology."""
+        return self.predict_with_embedding(image)[0]
+
+    def predict_with_embedding(
+        self, image: Image.Image
+    ) -> tuple[list[ClassifierPrediction], np.ndarray]:
+        """Like predict(), plus the (1024,) pooled feature vector used for retrieval."""
+        outputs, features = self._forward(self.preprocess(image))
+        return self._to_predictions(outputs[0]), features[0]
+
+    def embed_batch(self, images: list[Image.Image]) -> tuple[np.ndarray, np.ndarray]:
+        """Batch version for dataset preprocessing: (features (B, 1024), raw outputs (B, P))."""
+        batch = torch.cat([self.preprocess(image) for image in images])
+        outputs, features = self._forward(batch)
+        return features, outputs

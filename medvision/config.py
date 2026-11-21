@@ -73,6 +73,7 @@ class RetrievalConfig(BaseModel):
     top_k_nodes: int = 5
     top_k_snippets: int = 5
     top_k_cases: int = 5
+    cases_in_prompt: int = 3
 
 
 class LlmConfig(BaseModel):
@@ -105,6 +106,29 @@ class IoConfig(BaseModel):
     dicom: DicomConfig = DicomConfig()
 
 
+class AlignConfig(BaseModel):
+    feature_dim: int = 1024  # pooled DenseNet-121 feature size
+    embed_dim: int = 128
+    hidden_dim: int = 256
+    gnn_layers: int = 2
+    gnn_heads: int = 4
+    dropout: float = 0.2
+    init_temperature: float = 0.07
+    node_loss_weight: float = 0.5
+    lr: float = 1e-3
+    weight_decay: float = 1e-4
+    epochs: int = 80
+    patience: int = 12
+    batch_size: int = 256
+    seed: int = 0
+    features_file: str = "nih_features.npz"
+    checkpoint_file: str = "alignment.pt"
+    nih_dir: str = "data/raw/nih"
+    chroma_collection_nodes: str = "kg_nodes"
+    chroma_collection_cases: str = "cases"
+    min_positives_for_auroc: int = 20
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="MEDVISION__", env_nested_delimiter="__")
 
@@ -118,6 +142,7 @@ class Settings(BaseSettings):
     llm: LlmConfig = LlmConfig()
     api: ApiConfig = ApiConfig()
     io: IoConfig = IoConfig()
+    align: AlignConfig = AlignConfig()
     disclaimer: str = "Research prototype. Not for clinical use."
 
 

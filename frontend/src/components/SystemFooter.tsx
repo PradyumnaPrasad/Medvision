@@ -26,6 +26,11 @@ export function SystemFooter({ health }: { health: HealthOut | null }) {
             <span>
               Knowledge graph: {health.kg_nodes} nodes, {health.kg_edges} edges
             </span>
+            <span className="text-slate-300 dark:text-slate-600">·</span>
+            <span className="flex items-center gap-1.5">
+              <StatusDot ok={!!health.retrieval_ready} /> case retrieval{" "}
+              {health.retrieval_ready ? "ready" : "not built"}
+            </span>
           </>
         ) : (
           <span className="flex items-center gap-1.5 text-rose-500">

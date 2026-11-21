@@ -14,7 +14,7 @@ from medvision.config import get_settings
 from medvision.kg.graph import KnowledgeGraph
 from medvision.kg.reasoning import DiagnosisScore
 from medvision.reasoning.llm import LlmInvalidResponseError, LlmUnavailableError, OllamaClient
-from medvision.reasoning.prompt import FindingLike, build_evidence_block, build_prompt
+from medvision.reasoning.prompt import CaseLike, FindingLike, build_evidence_block, build_prompt
 from medvision.reasoning.schema import EvidenceBlock, GroundingResult, LLMReport
 from medvision.reasoning.template import build_template_report
 from medvision.reasoning.verifier import feedback_text, verify
@@ -36,8 +36,9 @@ def narrate(
     differentials: list[DiagnosisScore],
     graph: KnowledgeGraph,
     client: OllamaClient | None = None,
+    cases: list[CaseLike] | None = None,
 ) -> NarrationResult:
-    evidence = build_evidence_block(findings, differentials, graph)
+    evidence = build_evidence_block(findings, differentials, graph, cases)
     client = client or OllamaClient()
 
     if not client.is_available():

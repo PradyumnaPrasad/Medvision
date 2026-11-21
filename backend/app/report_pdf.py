@@ -241,6 +241,36 @@ def _differentials_block(result: AnalysisResult, verdicts: dict[str, str], style
     return out
 
 
+def _retrieval_block(result: AnalysisResult, styles: dict) -> list:
+    retrieval = result.retrieval
+    if retrieval is None:
+        return []
+    out: list = [Paragraph("Similar reference cases (aligned image-graph space)", styles["h2"])]
+    if retrieval.similar_cases:
+        rows = [[_header_text(h, styles) for h in ("Case", "Labels", "Similarity")]]
+        for case in retrieval.similar_cases:
+            rows.append(
+                [
+                    Paragraph(_safe(case.case_id), styles["cell"]),
+                    Paragraph(_safe(", ".join(case.labels) or "-"), styles["cell"]),
+                    Paragraph(f"{case.similarity * 100:.0f}%", styles["cell"]),
+                ]
+            )
+        out.append(_grid(rows, [5.2 * cm, 9.0 * cm, 3.0 * cm]))
+    if retrieval.node_hints:
+        hints = ", ".join(f"{_safe(h.name)} ({h.score * 100:.0f})" for h in retrieval.node_hints)
+        out.append(Spacer(1, 3))
+        out.append(Paragraph(f"<b>Closest knowledge-graph nodes:</b> {hints}", styles["small"]))
+    out.append(
+        Paragraph(
+            "Supporting context only; it does not change the diagnosis ranking. Reference "
+            "cases are a public NIH ChestX-ray14 sample.",
+            styles["small"],
+        )
+    )
+    return out
+
+
 def _report_block(result: AnalysisResult, styles: dict) -> list:
     report = result.report
     out: list = []
@@ -328,6 +358,10 @@ def _evidence_legend(result: AnalysisResult, styles: dict) -> list:
     for k in ev.kg_facts:
         rows.append(
             [Paragraph(_safe(k.id), styles["cell"]), Paragraph(_safe(k.text), styles["cell"])]
+        )
+    for c in ev.cases:
+        rows.append(
+            [Paragraph(_safe(c.id), styles["cell"]), Paragraph(_safe(c.text), styles["cell"])]
         )
     return [_grid(rows, [1.6 * cm, 15.6 * cm])] if len(rows) > 1 else []
 
@@ -435,6 +469,7 @@ def render_report_pdf(
     story += _findings_table(result.findings, verdicts, styles)
     story.append(Paragraph("Differential diagnoses (knowledge-graph reasoning)", styles["h2"]))
     story += _differentials_block(result, verdicts, styles)
+    story += _retrieval_block(result, styles)
     story.append(Paragraph("Draft report", styles["h2"]))
     story += _grounding_block(result, styles)
     story += _report_block(result, styles)

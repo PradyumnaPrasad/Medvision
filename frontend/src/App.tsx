@@ -15,6 +15,7 @@ import { AlertIcon, LogoMarkIcon } from "./components/icons";
 import { ImageViewer } from "./components/ImageViewer";
 import { QualityWarningBanner } from "./components/QualityWarningBanner";
 import { ReportPanel } from "./components/ReportPanel";
+import { RetrievalPanel } from "./components/RetrievalPanel";
 import { SummaryCard } from "./components/SummaryCard";
 import { SystemFooter } from "./components/SystemFooter";
 import { ThemeToggle } from "./components/ThemeToggle";
@@ -199,6 +200,7 @@ function App() {
                   feedback={feedback}
                   onFeedback={handleFeedback}
                 />
+                <RetrievalPanel retrieval={result.retrieval} />
                 <ReportPanel
                   report={result.report}
                   report_source={result.report_source}

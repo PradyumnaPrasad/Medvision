@@ -38,4 +38,5 @@ class HealthOut(BaseModel):
     device: str
     kg_nodes: int
     kg_edges: int
+    retrieval_ready: bool = False
     disclaimer: str

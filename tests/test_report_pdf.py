@@ -247,3 +247,47 @@ def test_renders_when_sections_are_empty(tmp_path, empty_part):
 
 def test_accepts_a_path_that_does_not_exist(tmp_path):
     assert render_report_pdf(make_result(), [], Path(tmp_path / "nope")).startswith(b"%PDF")
+
+
+def test_retrieval_section_is_rendered_when_present_and_omitted_otherwise(tmp_path):
+    from medvision.pipeline import NodeHintOut, RetrievalOut, SimilarCaseOut
+    from medvision.reasoning.schema import EvidenceCase
+
+    base = make_result()
+    assert "Similar reference cases" not in "\n".join(
+        pdf_text(render_report_pdf(base, [], tmp_path))[1]
+    )
+
+    retrieval = RetrievalOut(
+        node_hints=[NodeHintOut(node_id="F_EFFUSION", name="Pleural Effusion", score=0.81)],
+        similar_cases=[
+            SimilarCaseOut(
+                case_id="nih-test-42",
+                similarity=0.87,
+                labels=["Effusion", "Atelectasis"],
+                finding_node_ids=["F_EFFUSION", "F_ATELECTASIS"],
+                split="test",
+            )
+        ],
+    )
+    case = EvidenceCase(
+        id="C1", case_id="nih-test-42", similarity=0.87, labels=["Effusion"], text="Similar case C1"
+    )
+    evidence = base.evidence.model_copy(update={"cases": [case]})
+    text = "\n".join(
+        pdf_text(
+            render_report_pdf(
+                base.model_copy(update={"retrieval": retrieval, "evidence": evidence}), [], tmp_path
+            )
+        )[1]
+    )
+    for expected in [
+        "Similar reference cases",
+        "nih-test-42",
+        "Effusion, Atelectasis",
+        "87%",
+        "Closest knowledge-graph nodes",
+        "Pleural Effusion (81)",
+        "Similar case C1",
+    ]:
+        assert expected in text, expected

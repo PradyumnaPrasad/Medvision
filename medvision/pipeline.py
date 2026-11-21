@@ -31,6 +31,7 @@ from medvision.reasoning.llm import OllamaClient
 from medvision.reasoning.narrate import narrate
 from medvision.reasoning.schema import EvidenceBlock, GroundingResult, LLMReport
 from medvision.reasoning.template import flatten_report
+from medvision.retrieval.search import RetrievalService
 from medvision.vision.calibrate import CalibrationData, load_calibration
 from medvision.vision.classifier import ChestXrayClassifier
 
@@ -67,6 +68,27 @@ class FindingOut(BaseModel):
     heatmap_path: str | None = None  # filesystem-relative path under uploads_dir
 
 
+class NodeHintOut(BaseModel):
+    node_id: str
+    name: str
+    score: float
+
+
+class SimilarCaseOut(BaseModel):
+    case_id: str
+    similarity: float
+    labels: list[str]
+    finding_node_ids: list[str]
+    split: str
+
+
+class RetrievalOut(BaseModel):
+    """Supporting context from the aligned image/graph space. Never changes the ranking."""
+
+    node_hints: list[NodeHintOut]
+    similar_cases: list[SimilarCaseOut]
+
+
 class AnalysisResult(BaseModel):
     id: str
     created_at: float
@@ -78,6 +100,7 @@ class AnalysisResult(BaseModel):
     evidence: EvidenceBlock  # id-tagged evidence (F1, D1, K1, ...) that report cites
     report_text: str  # flattened plain-text rendering of `report`, for PDF/back-compat
     quality_warnings: list[str] = Field(default_factory=list)  # soft QC flags; [] if none
+    retrieval: RetrievalOut | None = None  # None when the alignment index isn't built
     timings_ms: dict[str, float]
     disclaimer: str
 
@@ -89,6 +112,7 @@ class _Models:
     graph: KnowledgeGraph
     llm_client: OllamaClient
     calibration: CalibrationData
+    retrieval: RetrievalService | None
 
 
 @lru_cache(maxsize=1)
@@ -108,6 +132,7 @@ def get_models() -> _Models:
         graph=graph,
         llm_client=llm_client,
         calibration=calibration,
+        retrieval=RetrievalService.load_if_available(graph),
     )
 
 
@@ -188,7 +213,7 @@ def analyze(
         raise InvalidImageError(quality)
 
     t0 = time.perf_counter()
-    predictions = models.classifier.predict(image)
+    predictions, embedding = models.classifier.predict_with_embedding(image)
     timings["vision_ms"] = (time.perf_counter() - t0) * 1000
 
     pos_th = settings.vision.default_pos_threshold
@@ -254,13 +279,33 @@ def analyze(
     ]
     timings["kg_reasoning_ms"] = (time.perf_counter() - t0) * 1000
 
+    retrieval_out: RetrievalOut | None = None
+    retrieved = None
+    if models.retrieval is not None:
+        t0 = time.perf_counter()
+        retrieved = models.retrieval.search(embedding)
+        retrieval_out = RetrievalOut(
+            node_hints=[NodeHintOut(**h.__dict__) for h in retrieved.node_hints],
+            similar_cases=[SimilarCaseOut(**c.__dict__) for c in retrieved.similar_cases],
+        )
+        timings["retrieval_ms"] = (time.perf_counter() - t0) * 1000
+
     # sort before building evidence so evidence ids (F1, F2, ...) follow the same
     # descending-probability order the API/UI display the findings in
     findings.sort(key=lambda f: -f.prob)
 
     t0 = time.perf_counter()
     evidence_findings = [_evidence_view(f, models.graph) for f in findings]
-    narration = narrate(evidence_findings, diagnosis_scores, models.graph, client=models.llm_client)
+    prompt_cases = (
+        retrieved.similar_cases[: settings.retrieval.cases_in_prompt] if retrieved else []
+    )
+    narration = narrate(
+        evidence_findings,
+        diagnosis_scores,
+        models.graph,
+        client=models.llm_client,
+        cases=prompt_cases,
+    )
     report_text = flatten_report(narration.report, settings.disclaimer)
     timings["narration_ms"] = (time.perf_counter() - t0) * 1000
 
@@ -277,6 +322,7 @@ def analyze(
         evidence=narration.evidence,
         report_text=report_text,
         quality_warnings=[*quality.flags, *(extra_warnings or [])],
+        retrieval=retrieval_out,
         timings_ms=timings,
         disclaimer=settings.disclaimer,
     )
